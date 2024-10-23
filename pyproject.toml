@@ -2,7 +2,7 @@
 name = "watchnet"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Tomas Gomez <tagomez@estudiantes.unsam.edu.ar>, Victoria Arrudi <varrudi@estudiantes.unsam.edu.ar>"]
 license = "MIT"
 readme = "README.md"
 
@@ -53,6 +53,9 @@ typing-extensions = "4.12.2"
 websockets = "13.1"
 werkzeug = "3.0.4"
 yarl = "1.13.1"
+flask-sqlalchemy = "^3.1.1"
+psycopg2 = "^2.9.10"
+flask-login = "^0.6.3"
 
 
 [build-system]

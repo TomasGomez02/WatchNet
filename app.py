@@ -1,14 +1,12 @@
 from flask import Flask
-from flask_restful import Resource, Api
+from flask_restful import Api
+from flask_sqlalchemy import SQLAlchemy
+from config import DB_PASSWORD
 
 app = Flask(__name__)
 api = Api(app)
 
-class HelloWorld(Resource):
-    def get(self):
-        return {'Hello': 'world'}
-    
-api.add_resource(HelloWorld, '/')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres.usgghxxkxvuesclhvvyn:{DB_PASSWORD}@aws-0-us-east-1.pooler.supabase.com:6543/postgres'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-if __name__ == '__main__':
-    app.run(debug=True)
+db = SQLAlchemy(app)
