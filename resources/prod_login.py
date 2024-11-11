@@ -18,11 +18,8 @@ class Login(Resource):
 
         if not login_info or not login_info.check_password(password):
             return {'error': 'Login info incorrect.'}, 400
-
-        es_usuario = Usuario.query.filter_by(info_login_id=login_info.id).first()
-        return {'message': 'Login successful', 
-                'name': login_info.nombre_usuario, 
-                'type': ('usuario' if es_usuario else 'productora')}, 201
+        
+        return {'message': 'Login successful', 'name': login_info.nombre_usuario}, 201
     
     def get(self):
         response = make_response(render_template('login.html'))

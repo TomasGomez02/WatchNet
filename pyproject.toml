@@ -56,6 +56,7 @@ yarl = "1.13.1"
 flask-sqlalchemy = "^3.1.1"
 psycopg2 = "^2.9.10"
 flask-login = "^0.6.3"
+pyjwt = "^2.9.0"
 
 
 [build-system]
