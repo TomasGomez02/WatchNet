@@ -75,16 +75,18 @@
                 body: JSON.stringify(data)
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showMessage(data.error, true);
-                } else if (data.name) {
-                    showMessage('Welcome, ' + data.name + ' ' + data.type);
-                } else {
-                    showMessage('Invalid credentials', true);
-                }
-            })
-            .catch(error => showMessage('Error: ' + error, true))
+                .then(data => {
+                    if (data.redirect_url) {
+                        // Redirect to the new URL
+                        window.location.href = data.redirect_url;
+                    } else if (data.status != 302) {
+                        showMessage("Invalid Credentials", true);
+                    }
+                    else {
+                        console.error("No redirect URL found");
+                    }
+                })
+            .catch(error => console.error("Error:", error))
             .finally(() => {
                 button.disabled = false; // Habilitar el botón
                 showLoading(false); // Ocultar el indicador de carga
