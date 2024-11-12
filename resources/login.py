@@ -6,7 +6,6 @@ from models.usuario import Usuario
 from app import db, generate_token, api
 
 class Login(Resource):
-    @api.representation('text/plain')
     def post(self):
         data = request.get_json()
         email = data['email']
@@ -23,11 +22,12 @@ class Login(Resource):
         token = generate_token(login_info.nombre_usuario)
         usuario = Usuario.query.filter_by(info_login_id=login_info.id).first()
 
-        response = jsonify({"redirect_url": url_for('userprofile', current_user=login_info.nombre_usuario)})
+        if usuario:
+            response = jsonify({"redirect_url": url_for('userprofile', current_user=login_info.nombre_usuario)})
+        else:
+            response = jsonify({"redirect_url": url_for('productoraprofile', current_user=login_info.nombre_usuario)})
         response.status = 302
         response.set_cookie('auth_token', token)
-        #response.headers["Content-Type"] = "text/html"
-        print('?')
         return response
     
     def get(self):

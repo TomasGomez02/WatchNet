@@ -75,17 +75,17 @@
                 body: JSON.stringify(data)
             })
             .then(response => response.json())
-                .then(data => {
-                    if (data.redirect_url) {
-                        // Redirect to the new URL
-                        window.location.href = data.redirect_url;
-                    } else if (data.status != 302) {
-                        showMessage("Invalid Credentials", true);
-                    }
-                    else {
-                        console.error("No redirect URL found");
-                    }
-                })
+            .then(data => {
+                if (data.redirect_url) {
+                    // Redirect to the new URL
+                    window.location.href = data.redirect_url;
+                } else if (data.status != 302) {
+                    showMessage("Invalid Credentials", true);
+                }
+                else {
+                    console.error("No redirect URL found");
+                }
+            })
             .catch(error => console.error("Error:", error))
             .finally(() => {
                 button.disabled = false; // Habilitar el botón
