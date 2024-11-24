@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login and SignUp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            max-width: 300px;
+            width: 100%;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .message {
+            margin-top: 20px;
+            font-size: 16px;
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .loading {
+            font-size: 14px;
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button class="button" id="loginButton" onclick="login()">Login</button>
+
+        <div id="message" class="message"></div>
+        <div id="loading" class="loading" style="display: none;">Processing...</div>
+    </div>
+
+    <script>
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const button = document.getElementById('loginButton');
+            button.disabled = true; // Deshabilitar el botón
+            showLoading(true); // Mostrar el indicador de carga
+
+            const data = {
+                email: email,
+                password: password
+            };
+
+            fetch('http://127.0.0.1:5000/login', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+                .then(data => {
+                    if (data.redirect_url) {
+                        // Redirect to the new URL
+                        window.location.href = data.redirect_url;
+                    } else if (data.status != 302) {
+                        showMessage("Invalid Credentials", true);
+                    }
+                    else {
+                        console.error("No redirect URL found");
+                    }
+                })
+            .catch(error => console.error("Error:", error))
+            .finally(() => {
+                button.disabled = false; // Habilitar el botón
+                showLoading(false); // Ocultar el indicador de carga
+            });
+        }
+
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.classList.toggle('error', isError);
+        }
+
+        function showLoading(isLoading) {
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = isLoading ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
