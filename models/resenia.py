@@ -9,4 +9,4 @@ class Resenia(db.Model, UserMixin):
     usuario_id = db.Column(db.Integer, nullable=False)
     titulo_id = db.Column(db.Integer, nullable=False)
     duracion = db.Column(db.Integer, nullable=False)
-    fecha_publicacion = db.Column(db.Timestamp, nullable=False)
+    fecha_publicacion = db.Column(db.Date, nullable=False)

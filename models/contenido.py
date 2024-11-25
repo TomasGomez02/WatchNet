@@ -8,4 +8,4 @@ class Contenido(db.Model, UserMixin):
     titulo_id = db.Column(db.Integer, unique=True, nullable=False)
     tipo = db.Column(db.Enum(TipoContenido), nullable=False)
     duracion = db.Column(db.Integer, nullable=False)
-    fecha_publicacion = db.Column(db.Timestamp, nullable=False)
+    fecha_publicacion = db.Column(db.Date, nullable=False)
