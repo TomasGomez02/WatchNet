@@ -60,9 +60,6 @@
                 <label for="titleId">Title ID:</label>
                 <input type="number" id="titleId" placeholder="Enter title ID" required><br>
 
-                <label for="duration">Duration (min):</label>
-                <input type="number" id="duration" placeholder="Enter duration in minutes" required><br>
-
                 <input type="hidden" id="current_user" value="{{ current_user }}">
 
                 <button type="button" class="button" id="addReviewButton" onclick="addReview()">Submit Review</button>
@@ -74,40 +71,27 @@
     </div>
 
     <script>
-        function showLoading(show) {
-            const loadingMessage = document.getElementById('message');
-            loadingMessage.className = 'loading';
-            loadingMessage.textContent = show ? 'Processing...' : '';
-        }
-
-        function showMessage(msg, isError) {
-            const messageBox = document.getElementById('message');
-            messageBox.textContent = msg;
-            messageBox.className = isError ? 'error' : 'message';
-        }
-
         function addReview() {
-            const score = document.getElementById('score').value; // Puntuación
-            const text = document.getElementById('text').value; // Texto de la reseña
-            const titleId = document.getElementById('titleId').value; // ID del título
-            const duration = document.getElementById('duration').value; // Duración
-            const current_user = document.getElementById('current_user').value; // Usuario actual
-    
+            const score = document.getElementById('score').value;
+            const text = document.getElementById('text').value;
+            const titleId = document.getElementById('titleId').value;
+            const current_user = document.getElementById('current_user').value;
+
             const button = document.getElementById('addReviewButton');
-            button.disabled = true; // Desactivar botón
-            showLoading(true); // Mostrar indicador de carga
-    
+            button.disabled = true;
+            showLoading(true);
+
             const data = {
                 puntuacion: score,
                 texto: text,
-                titulo_id: titleId,
-                duracion: duration
+                titulo_id: titleId
             };
-    
-            // Hacer la petición POST
+
             fetch(`http://127.0.0.1:5000/usuario/${encodeURIComponent(current_user)}/nuevaResenia`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(data)
             })
             .then(response => {
@@ -125,10 +109,21 @@
                 showMessage("Error adding review", true);
             })
             .finally(() => {
-                button.disabled = false; // Reactivar botón
-                showLoading(false); // Ocultar indicador de carga
+                button.disabled = false;
+                showLoading(false);
             });
         }
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.classList.toggle('error', isError);
+        }
+
+        function showLoading(isLoading) {
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = isLoading ? 'block' : 'none';
+        }
+         
     </script>
     
 </body>
