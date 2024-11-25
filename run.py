@@ -1,4 +1,5 @@
 from app import app, db, api
+from resources.crear_resenia import CrearResenia
 from resources.singup import SignUp
 from resources.login import Login
 from resources.prod_signup import Productora_SignUp
@@ -15,6 +16,7 @@ api.add_resource(Login, '/login')
 api.add_resource(UserProfile, '/user', '/user/<string:current_user>')
 api.add_resource(ProductoraProfile, '/productora', '/productora/<string:current_user>')
 api.add_resource(NuevoContenido, '/productora/<string:current_user>/nuevoContenido')
+api.add_resource(CrearResenia, '/usuario/<string:current_user>/nuevaResenia')
 
 @app.route('/')
 def index():

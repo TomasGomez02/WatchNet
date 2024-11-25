@@ -7,5 +7,5 @@ class Usuario(db.Model, UserMixin):
     info_login_id = db.Column(db.Integer, unique=True, nullable=False)
     usuarios_seguidos = db.Column(db.ARRAY(db.Integer), nullable=True)
     productoras_seguidas = db.Column(db.ARRAY(db.Integer), nullable=True)
-    productoras_seguidas = db.Column(db.ARRAY(db.Integer), nullable=True)
+
 
