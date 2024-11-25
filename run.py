@@ -12,7 +12,7 @@ from flask.templating import render_template
 #api.add_resource(HelloWorld, '/')
 api.add_resource(SignUp, '/signup')
 api.add_resource(Productora_SignUp, '/productora/signup')
-api.add_resource(Login, '/login')
+api.add_resource(Login, '/login', '/')
 api.add_resource(UserProfile, '/user', '/user/<string:current_user>')
 api.add_resource(ProductoraProfile, '/productora', '/productora/<string:current_user>')
 api.add_resource(NuevoContenido, '/productora/<string:current_user>/nuevoContenido')
