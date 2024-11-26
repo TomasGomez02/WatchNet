@@ -18,6 +18,7 @@ api.add_resource(ProductoraProfile, '/productora', '/productora/<string:current_
 api.add_resource(NuevoContenido, '/productora/<string:current_user>/nuevoContenido')
 api.add_resource(CrearResenia, '/usuario/<string:current_user>/nuevaResenia')
 
+
 @app.route('/')
 def index():
     return render_template('index.html')

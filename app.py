@@ -5,6 +5,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE, TOKEN_KEY
 
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -39,3 +40,4 @@ def token_required(f):
             return make_response(jsonify({'message': 'Invalid token!'}), 403)
         return f(*args, user)
     return decorated
+
