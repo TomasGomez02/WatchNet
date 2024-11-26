@@ -57,8 +57,8 @@
                 <label for="text">Review Text:</label>
                 <textarea id="text" placeholder="Write your review..." required></textarea><br>
 
-                <label for="nombre_contenido">Content Name (existing in the database):</label>
-                <input type="text" id="nombre_contenido" placeholder="Enter the name of the content" required><br>
+                <label for="nombre_contenido">Content Name:</label>
+                <textarea id="nombre_contenido" placeholder="Enter the name of the content" required></textarea><br>
 
                 <input type="hidden" id="current_user" value="{{ current_user }}">
 
@@ -81,37 +81,43 @@
             button.disabled = true;
             showLoading(true);
 
-           
+            // Obtener el ID del contenido antes de enviar la reseña
+            fetch(`http://127.0.0.1:5000/obtener_contenido_id/${encodeURIComponent(nombre_contenido)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.id) {
+                        const reviewData = {
+                            puntuacion: puntaje,
+                            texto: texto,
+                            titulo_id: data.id // Usar el ID del contenido encontrado
+                        };
 
-            const reviewData = {
-            puntuacion: puntaje,
-            texto: texto,
-            titulo_id: contenidoId  // Usar el ID del contenido encontrado
-            };
-
-                // Enviar la reseña al servidor
-            return fetch(`http://127.0.0.1:5000/usuario/${encodeURIComponent(current_user)}/nuevaResenia`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(reviewData)
+                        // Enviar la reseña al servidor
+                        return fetch(`http://127.0.0.1:5000/usuario/${encodeURIComponent(current_user)}/nuevaResenia`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(reviewData)
+                        });
+                    } else {
+                        throw new Error("Content not found");
+                    }
+                })
+                .then(response => {
+                    if (response.status === 201) {
+                        showMessage("Review added successfully", false);
+                    } else {
+                        throw new Error("Failed to add review");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    showMessage("Error adding review: " + error.message, true);
+                })
+                .finally(() => {
+                    button.disabled = false;
+                    showLoading(false);
                 });
-            })
-            .then(response => {
-                if (response.status === 201) {
-                    showMessage("Review added successfully", false);
-                } else {
-                    throw new Error("Failed to add review");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                showMessage("Error adding review", true);
-            })
-            .finally(() => {
-                button.disabled = false;
-                showLoading(false);
-            });
-        
+        }
 
         function showMessage(message, isError = false) {
             const messageDiv = document.getElementById('message');
@@ -125,5 +131,6 @@
         }
     </script>
 </body>
+
 
 </html>
