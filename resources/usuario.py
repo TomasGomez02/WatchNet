@@ -305,13 +305,56 @@ class ActualizarSeguimiento(Resource):
         data = request.get_json()
         estado = data['estado', seguimiento.estado]  # Si no se pasa, se mantiene el actual
         cantidad_visto = data['cantidad_visto', seguimiento.cantidad_visto]  
-        
+
         # Actualizar el seguimiento
         seguimiento.estado = estado
         seguimiento.cantidad_visto = cantidad_visto
 
         db.session.commit()
         return {'message': 'Seguimiento actualizado con éxito'}, 200
+    
+class PerfilUsuario(Resource):
+    @token_required
+    def get(self, current_user, seccion=None):
+        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
+
+        if seccion == 'resenias':
+            return self.obtener_resenias(usuario.id)
+        elif seccion == 'series':
+            return self.obtener_series(usuario.id)
+        elif seccion == 'info':
+            return self.obtener_info(usuario.id)
+        elif seccion is None:
+            return self.obtener_perfil_completo(usuario.id)
+        else:
+            return {'message': 'Sección no válida'}, 400
+
+    def obtener_resenias(self, usuario_id):
+        resenias = Resenia.query.filter_by(usuario_id=usuario_id).all()
+        resenias_data = [{'id': r.id, 'puntuacion': r.puntuacion, 'texto': r.texto, 'fecha': r.fecha_publicacion.isoformat()} for r in resenias]
+        return {'reseñas': resenias_data}
+
+    def obtener_series(self, usuario_id):
+        series = Seguimiento.query.filter_by(usuario_id=usuario_id).all()
+        series_data = [{'titulo_id': s.titulo_id, 'estado': s.estado, 'cantidad_visto': s.cantidad_visto} for s in series]
+        return {'series_vistas': series_data}
+
+    def obtener_info(self, usuario_id):
+        usuario = Usuario.query.get(usuario_id)
+        info_data = {'nombre_usuario': usuario.nombre_usuario, 'email': usuario.email}
+        return {'usuario': info_data}
+
+    def obtener_perfil_completo(self, usuario_id):
+        info = self.obtener_info(usuario_id)
+        resenias = self.obtener_resenias(usuario_id)
+        series = self.obtener_series(usuario_id)
+        
+        return {
+            'usuario': info['usuario'],
+            'reseñas': resenias['reseñas'],
+            'series_vistas': series['series_vistas']
+        }, 200
+
 
 
 
