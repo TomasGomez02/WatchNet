@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum 
 
 class TipoContenido(Enum):
     PELICULA = 1

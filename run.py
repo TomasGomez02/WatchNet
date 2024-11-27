@@ -1,4 +1,6 @@
 from app import app, db, api
+from resources.agregar_comentario import Comentar
+from resources.agregar_serie import NuevaSerie
 from resources.crear_resenia import CrearResenia
 from resources.singup import SignUp
 from resources.login import Login
@@ -16,7 +18,10 @@ api.add_resource(Login, '/login')
 api.add_resource(UserProfile, '/user', '/user/<string:current_user>')
 api.add_resource(ProductoraProfile, '/productora', '/productora/<string:current_user>')
 api.add_resource(NuevoContenido, '/productora/<string:current_user>/nuevoContenido')
-api.add_resource(CrearResenia, '/usuario/<string:current_user>/nuevaResenia')
+api.add_resource(CrearResenia, '/user/<string:current_user>/nuevaResenia')
+api.add_resource(Comentar, '/user/<string:current_user>/<int:resenia_id>/agregarComentario')
+api.add_resource(NuevaSerie, '/productora/<string:current_user>/nuevaSerie')
+
 
 
 @app.route('/')

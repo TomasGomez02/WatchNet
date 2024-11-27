@@ -7,4 +7,4 @@ class Comentario(db.Model, UserMixin):
     texto = db.Column(db.Text, nullable=False)
     usuario_id = db.Column(db.Integer, nullable=False)
     resenia_id = db.Column(db.Integer, nullable=False)
-    fecha_publicacion = db.Column(db.Timestamp, nullable=False)
+    fecha_publicacion = db.Column(db.DateTime, nullable=False)
