@@ -10,7 +10,25 @@ productora_bp = Blueprint('productora', __name__)
 productora_api = Api(productora_bp)
 
 class Login(Resource):
+    """
+    Clase que maneja las operaciones de inicio de sesión para una productora.
+
+    """
     def post(self):
+        """
+        Método para iniciar sesión.
+
+        Retorna
+        -------
+        dict
+            Un diccionario con un mensaje de error si los datos son incorrectos o faltan, o una redirección 
+            a la página de perfil de la productora si el inicio de sesión es exitoso.
+        
+        Excepciones
+        -----------
+        400
+            Si el correo electrónico o la contraseña están vacíos o son incorrectos.
+        """
         data = request.form
         email = data.get('email')
         password = data.get('password')
@@ -29,16 +47,52 @@ class Login(Resource):
         return redirect(url_for('productora.productoraprofile', current_user=login_info.nombre_usuario))
     
     def get(self):
+        """
+        Método para obtener la página de inicio de sesión.
+
+        Retorna
+        -------
+        Response
+            Una respuesta que contiene el HTML de la página de inicio de sesión.
+        """
         response = make_response(render_template('login_prod.html'))
         response.headers["Content-Type"] = "text/html"
         return response
     
     def delete(self):
+        """
+        Método para cerrar sesión.
+
+        Retorna
+        -------
+        Response
+            Una redirección a la página principal después de cerrar sesión.
+        """
         session.pop('auth_token', None)
         return redirect(url_for('index'))
     
 class SignUp(Resource):
+    """
+    Clase que maneja el registro de una nueva productora.
+
+    """
     def post(self):
+        """
+        Método para registrar una nueva productora.
+
+        Retorna
+        -------
+        dict
+            Un diccionario con un mensaje de error si los datos son incorrectos o ya existen, 
+            o un mensaje de éxito si el registro fue exitoso.
+        
+        Excepciones
+        -----------
+        400
+            Si falta algún dato requerido o si el correo electrónico o el nombre de usuario ya están registrados.
+        200
+            Si el usuario fue registrado correctamente.
+        """
         data = request.form
         email = data.get('email')
         password = data.get('password')
@@ -59,26 +113,76 @@ class SignUp(Resource):
         db.session.add(new_login)
         db.session.commit()
 
-        return {'message': 'Usuario registrado'}, 201
+        return {'message': 'Usuario registrado'}, 200
     
     def get(self):
+        """
+        Método para obtener la página de registro.
+
+        Retorna
+        -------
+        Response
+            Una respuesta que contiene el HTML de la página de registro.
+        """
         response = make_response(render_template('signup_prod.html'))
         response.headers["Content-Type"] = "text/html"
         return response
     
 class ProductoraProfile(Resource):
+    """
+    Clase que maneja la visualización y actualización del perfil de una productora.
+
+    """
     @token_required
     def get(self, current_user):
+        """
+        Método para obtener el perfil de la productora.
+
+        Parámetros
+        ----------
+        current_user : str
+            Nombre del usuario actual que está autenticado, extraído del token JWT.
+
+        Retorna
+        -------
+        response : Response
+            Respuesta con la plantilla HTML del perfil de la productora.
+        """
         response = make_response(render_template('productora_profile.html', current_user=current_user))
         response.headers["Content-Type"] = "text/html"
         return response
     
     def post(self):
+        """
+        Método para manejar una solicitud POST en el perfil de la productora.
+
+        Retorna
+        -------
+        dict
+            Un diccionario con un mensaje de confirmación y el código de estado HTTP 201.
+        """
         return {'message': 'hi'}, 201
     
 class NuevoTitulo(Resource):
+    """
+    Clase que maneja la creación de un nuevo título por parte de una productora.
+
+    """
     @token_required
     def post(self, current_user):
+        """
+        Método para crear un nuevo título en la base de datos.
+
+        Parámetros
+        -----------
+        current_user : str
+            Nombre del usuario autenticado, extraído del token JWT.
+
+        Retorna
+        --------
+        dict
+            Un diccionario con un mensaje de confirmación y el código de estado HTTP 200.
+        """
         data = request.get_json()
 
         productora = Productora.query.filter_by(nombre_usuario=current_user).first()

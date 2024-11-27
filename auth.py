@@ -5,6 +5,28 @@ import jwt
 from config import TOKEN_KEY
 
 def generate_token(username):
+    """
+    Genera un token JWT para un usuario dado.
+
+    El token tiene un tiempo de expiración de 15 minutos desde el momento en que se genera. 
+    Se utiliza el algoritmo HS256 para firmar el token, y el token contiene el nombre de usuario
+    y la fecha de expiración.
+
+    Parámetros
+    ----------
+    username : str
+        El nombre de usuario para el cual se genera el token.
+
+    Retorna
+    -------
+    str
+        Un token JWT que incluye el nombre de usuario y la fecha de expiración.
+    
+    Excepciones
+    ------
+    Exception
+        Si ocurre un error durante la creación del token, se lanzará una excepción.
+    """
     expiration = datetime.now(timezone.utc) + timedelta(minutes=15) 
     token = jwt.encode({
             'username': username,
@@ -14,6 +36,29 @@ def generate_token(username):
 
 # Decorador para proteger rutas
 def token_required(f):
+    """
+    Decorador para proteger las rutas que requieren autenticación con token JWT.
+
+    Este decorador asegura que la ruta esté protegida, verificando que el token JWT esté presente
+    en la sesión y que sea válido. Si el token no está presente, ha expirado o es inválido, 
+    se devuelve un error correspondiente. Si el token es válido, se ejecuta la función original
+    pasando el nombre de usuario del token como argumento.
+
+    Parámetros
+    ----------
+    f : function
+        La función de vista o ruta a la que se aplicará el decorador.
+
+    Retorna
+    -------
+    function
+        La función decorada que realiza la validación del token antes de ejecutar la función original.
+    
+    Excepciones
+    ------
+    UnauthorizedError
+        Si el token está ausente o es inválido, se retorna un mensaje de error con el código 401 o 403.
+    """
     def decorated(*args, **kwargs):
         token = session['auth_token']
         if not token:

@@ -9,6 +9,23 @@ from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE, TOKEN_KE
 
 
 def create_app(testing=False):
+    """
+    Crea y configura una instancia de la aplicación Flask.
+
+    Esta función inicializa la aplicación Flask, configura los blueprints para las rutas
+    de los usuarios y productoras, y configura la base de datos según el entorno. 
+
+    Parámetros
+    ----------
+    testing : bool, opcional
+        Indica si la aplicación debe ser configurada para pruebas (por defecto es False).
+        Si se establece en `True`, se utiliza una base de datos SQLite temporal para las pruebas.
+
+    Retorna
+    -------
+    app : Flask
+        Una instancia de la aplicación Flask configurada con todos los blueprints.
+    """
     app = Flask(__name__)
     api = Api(app)
 
