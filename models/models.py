@@ -76,7 +76,7 @@ class Titulo(db.Model):
     titulo = db.Column(db.Text, nullable=False)
     tipo = db.Column(db.Boolean, nullable=False)
     
-class Relacione(db.Model):
+class Relacion(db.Model):
     __tablename__ = 'Relaciones'
     seguidor = db.Column(db.Integer, primary_key=True)
     seguido = db.Column(db.Integer, primary_key=True)

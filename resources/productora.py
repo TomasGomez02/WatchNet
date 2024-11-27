@@ -3,7 +3,7 @@ from typing import Type
 from flask import Blueprint, request, make_response, redirect, url_for, session
 from flask_restful import Api, Resource
 from flask.templating import render_template
-from models.models import db, Productora, Usuario, Entidad
+from models.models import Titulo, db, Productora, Usuario, Entidad
 from auth import generate_token, token_required
 
 productora_bp = Blueprint('productora', __name__)
@@ -76,40 +76,79 @@ class ProductoraProfile(Resource):
     def post(self):
         return {'message': 'hi'}, 201
     
-class NuevoContenido(Resource):
+class NuevoTitulo(Resource):
     @token_required
     def post(self, current_user):
         data = request.get_json()
 
-        info_login = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        productora = Productora.query.filter_by(info_login_id=info_login.id).first()
+        productora = Productora.query.filter_by(nombre_usuario=current_user).first()
 
-        nombre = data['nombre_contenido']
-        titulo = Titulo(nombre=nombre, productora_id=productora.id)
-        db.session.add(titulo)
-        db.session.flush()
-
-        fecha_publicacion = data['fecha_publicacion']
+        fecha_inicio = data['fecha_inicio']
+        fecha_fin = data['fecha_fin']
+        titulo = data['Titulo']
+        #duracion = data['duracion']
         tipo = data['tipo']
-        duracion = data['duracion']
 
-        contenido = Contenido(titulo_id=titulo.id, 
-                              fecha_publicacion=fecha_publicacion,
-                              tipo=tipo, 
-                              duracion=duracion)
-        db.session.add(contenido)
-        db.session.flush()
-
-        contenidos = productora.contenidos_id
-        if contenidos:
-            productora.contenidos_id += [contenido.id]
-        else:
-            productora.contenidos_id = [contenido.id]
-
+        titulo = Titulo(fecha_inicio=fecha_inicio,
+                        fecha_fin=fecha_fin,
+                        titulo= titulo, 
+                        tipo =tipo,
+                        productora_id= productora.id)
+        
+        db.session.add(titulo)
         db.session.commit()
 
-        return {'message': 'Contenido añadido'}, 201
+        return {'message': 'Contenido añadido'}, 200
+    
+# class NuevoEpisodio(Resource):
+#     @token_required
+#     def post(self, current_user):
+#         data = request.get_json()
+
+#         productora = Productora.query.filter_by(nombre_usuario=current_user).first()
+
+#         # Obtener el nombre de la serie y crear el título
+#         nombre = data['nombre_serie']
+#         titulo = Titulo(nombre=nombre, productora_id=productora.id)
+#         db.session.add(titulo)
+#         db.session.flush()  
+
+#         # Obtener las fechas de inicio y fin de la serie
+#         fecha_inicio = data['fecha_inicio']
+#         fecha_fin = data['fecha_fin']
+
+#         # Obtener los IDs de episodios desde el JSON
+#         episodios = data['episodios']  # Lista de episodios (IDs de episodios)
+
+#         # Verificar que todos los episodios existan y sean tipo=EPISODIO (con valor 2)
+#         for episodio_id in episodios:
+#             episodio = Contenido.query.filter_by(id=episodio_id).first()
+#             if not episodio:
+#                 return {'message': f'Episodio con ID {episodio_id} no existe.'}, 400
+#             if episodio.tipo != TipoContenido.EPISODIO.value:  # Verificar si el tipo es EPISODIO
+#                 return {'message': f'Episodio con ID {episodio_id} no es de tipo EPISODIO.'}, 400
+
+#         # Crear la serie
+#         serie = Serie(titulo_id=titulo.id, 
+#                       fecha_inicio=fecha_inicio,
+#                       fecha_fin=fecha_fin,
+#                       episodios=episodios)
+#         db.session.add(serie)
+#         db.session.flush()  # Para obtener el id de la serie recién creada
+
+#         # Agregar la serie a la lista de series de la productora
+#         if productora.series_id:
+#             productora.series_id.append(serie.id)
+#         else:
+#             productora.series_id = [serie.id]
+
+#         db.session.commit()
+
+#         return {'message': 'Serie añadida con éxito'}, 201
+
     
 productora_api.add_resource(Login, '/login')
 productora_api.add_resource(SignUp, '/signup')
 productora_api.add_resource(ProductoraProfile, '/')
+productora_api.add_resource(NuevoTitulo, '/<str:current_user>/agregarTitulo')
+# productora_api.add_resource(NuevoEpisodio, '/<str:current_user>/agregarEpisodio')
