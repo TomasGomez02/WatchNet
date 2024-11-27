@@ -1,41 +1,40 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
-import jwt
-from datetime import datetime, timedelta, timezone
+from resources.crear_resenia import CrearResenia
+from resources.login import SignUp
+from resources.login import Login
+from resources.login import Productora_SignUp
+from resources.user_profile import UserProfile
+from resources.productora_profile import ProductoraProfile
+from resources.nuevo_contenido import NuevoContenido
+from resources.index import Index
+from models.models import db
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE, TOKEN_KEY
 
-app = Flask(__name__)
-api = Api(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_DATABASE}.{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = TOKEN_KEY
+def create_app(testing=False):
+    app = Flask(__name__)
+    api = Api(app)
 
-db = SQLAlchemy(app)
+    api.add_resource(Index, '/')
+    api.add_resource(SignUp, '/signup')
+    api.add_resource(Productora_SignUp, '/productora/signup')
+    api.add_resource(Login, '/login', '/')
+    api.add_resource(UserProfile, '/user')
+    api.add_resource(ProductoraProfile, '/productora')
+    api.add_resource(NuevoContenido, '/productora/nuevoContenido')
+    api.add_resource(CrearResenia, '/usuario/nuevaResenia')
 
-def generate_token(username):
-    expiration = datetime.now(timezone.utc) + timedelta(minutes=15) 
-    token = jwt.encode({
-            'username': username,
-            'exp': expiration
-        }, app.config['SECRET_KEY'], algorithm='HS256')
-    return token
+    if not testing:
+        URI = f'postgresql://{DB_DATABASE}.{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}'
+    else:
+        URI = 'sqlite://testing.db'
+        
+    app.config['SQLALCHEMY_DATABASE_URI'] = URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = TOKEN_KEY
 
-# Decorador para proteger rutas
-def token_required(f):
-    def decorated(*args, **kwargs):
-        token = request.cookies.get('auth_token')
-        if not token:
-            return make_response(jsonify({'message': 'Token is missing!'}), 401)
-        try:
-            print('a')
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            print('ab')
-            user = data['username']
-        except jwt.ExpiredSignatureError:
-            return make_response(jsonify({'message': 'Token has expired!'}), 403)
-        except jwt.InvalidTokenError:
-            return make_response(jsonify({'message': 'Invalid token!'}), 403)
-        return f(*args, user)
-    return decorated
+    db.init_app(app)
+    
+    return app

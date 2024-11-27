@@ -2,10 +2,8 @@ from flask import request
 from flask_login import current_user
 from flask_restful import Resource
 from datetime import datetime, timezone
-from app import token_required, db
-from models.info_login import InfoLogin
-from models.resenia import Resenia
-from models.usuario import Usuario
+from auth import token_required
+from models.models import db, InfoLogin, Resenia, Usuario
 
 class CrearResenia(Resource):
     @token_required
