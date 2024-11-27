@@ -2,6 +2,7 @@ from flask import Flask
 from flask_restful import Api
 from resources.usuario import usuario_bp
 from resources.productora import productora_bp
+from resources.tituloAPI import titulo_bp
 from resources.index import Index
 from models.models import db
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE, TOKEN_KEY
@@ -12,6 +13,7 @@ def create_app(local=False, local_path=''):
 
     app.register_blueprint(usuario_bp, url_prefix='/user')
     app.register_blueprint(productora_bp, url_prefix='/producer')
+    app.register_blueprint(titulo_bp, url_prefix='/api/titulo')
     api.add_resource(Index, '/')
 
     if not local:

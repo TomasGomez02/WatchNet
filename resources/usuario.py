@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import request, make_response, redirect, url_for, session, Blueprint
 from flask_restful import Resource, Api
 from flask.templating import render_template
-from models.models import Comentario, Impresion, Relacion, Resenia, Seguimiento, Titulo, db, Usuario
+from models.models import Comentario, Impresion, Relacion, Reseña, Seguimiento, Titulo, db, Usuario
 from auth import generate_token, token_required
 
 usuario_bp = Blueprint('usuario', __name__)
@@ -22,7 +22,7 @@ class Login(Resource):
         if not login_info or not login_info.check_password(password):
             return {'error': 'Login info incorrect.'}, 400
         
-        token = generate_token(login_info.nombre_usuario)
+        token = generate_token(login_info.nombre_usuario, 'user')
         session['auth_token'] = token
 
         return redirect(url_for('usuario.userprofile', current_user=login_info.nombre_usuario))
@@ -66,59 +66,13 @@ class SignUp(Resource):
         return response
     
 class UserProfile(Resource):
-    @token_required
+    @token_required(user_type='user')
     def get(self, current_user):
         response = make_response(render_template('user_profile.html', current_user=current_user))
         response.headers["Content-Type"] = "text/html"
         return response
-    
-class CrearResenia(Resource):
-    @token_required
-    def post(self, current_user, titulo_id):
-        data = request.get_json()
-
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario:
-            return {'message': 'Usuario no encontrado en la base de datos'}, 404
-
-        titulo = Titulo.query.filter_by(id=titulo_id).first()
-        if not titulo:
-            return {'message': f'Contenido no encontrado'}, 404
-
-        puntuacion = data['puntuacion']
-        texto = data['texto']
-     
-        resenia = Resenia(
-            usuario_id=usuario.id, 
-            puntuacion=puntuacion,
-            texto=texto,
-            titulo_id=titulo.id, 
-            fecha_publicacion= datetime.now(timezone.utc)
-        )
-        db.session.add(resenia)
-        db.session.commit()
-
-        return {'message': 'Reseña añadida con éxito'}, 200
-    
-class EliminarResenia(Resource):
-    @token_required
-    def delete(self, current_user, resenia_id):
-        resenia = Resenia.query.filter_by(id=resenia_id).first()
-
-        if not resenia:
-            return {'message': 'Reseña no encontrada'}, 404
-
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario or resenia.usuario_id != usuario.id:
-            return {'message': 'No tienes permiso para eliminar esta reseña'}, 403
-
-        db.session.delete(resenia)
-        db.session.commit()
-
-        return {'message': 'Reseña eliminada con éxito'}, 200
-
 class Comentar(Resource):
-    @token_required
+    @token_required(user_type='user')
     def post(self, current_user, resenia_id):
         data = request.get_json()
 
@@ -126,7 +80,7 @@ class Comentar(Resource):
         if not texto:
             return {'message': 'El texto del comentario es obligatorio'}, 400
 
-        resenia = Resenia.query.filter_by(id=resenia_id).first()
+        resenia = Reseña.query.filter_by(id=resenia_id).first()
         if not resenia:
             return {'message': 'Reseña no encontrada'}, 404
 
@@ -146,7 +100,7 @@ class Comentar(Resource):
 
         return {'message': 'Comentario agregado con éxito'}, 200
 class EliminarComentario(Resource):
-    @token_required
+    @token_required(user_type='user')
     def delete(self, current_user, comentario_id):
 
         comentario = Comentario.query.filter_by(id=comentario_id).first()
@@ -171,7 +125,7 @@ class PuntuarResenia(Resource):
         if valor not in [1, -1]:
             return {'message': 'El valor debe ser 1 (like) o -1 (dislike).'}, 400
 
-        resenia = Resenia.query.filter_by(id=resenia_id).first()
+        resenia = Reseña.query.filter_by(id=resenia_id).first()
         if not resenia:
             return {'message': 'Reseña no encontrada'}, 404
 
@@ -194,14 +148,14 @@ class PuntuarResenia(Resource):
         return {'message': f'Has dado un {"like" if valor == 1 else "dislike"} a la reseña.'}, 200
     
 class EliminarPuntaje(Resource):
-    @token_required
+    @token_required(user_type='user')
     def delete(self, current_user, resenia_id):
 
         usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
         if not usuario:
             return {'message': 'Usuario no encontrado en la base de datos'}, 404
 
-        resenia = Resenia.query.filter_by(id=resenia_id).first()
+        resenia = Reseña.query.filter_by(id=resenia_id).first()
         if not resenia:
             return {'message': 'Reseña no encontrada'}, 404
 
@@ -215,7 +169,7 @@ class EliminarPuntaje(Resource):
         return {'message': 'Puntuación eliminada con éxito.'}, 200
     
 class SeguirUsuario(Resource):
-    @token_required
+    @token_required(user_type='user')
     def post(self, current_user, seguido_id):
         
         seguidor = Usuario.query.filter_by(nombre_usuario=current_user).first()
@@ -240,7 +194,7 @@ class SeguirUsuario(Resource):
         return {'message': 'Ahora sigues a este usuario con éxito'}, 201
     
 class DejarDeSeguir(Resource):
-    @token_required
+    @token_required(user_type='user')
     def post(self, current_user, seguido_id):
         
         seguidor = Usuario.query.filter_by(nombre_usuario=current_user).first()
@@ -261,7 +215,7 @@ class DejarDeSeguir(Resource):
         return {'message': f'Has dejado de seguir a {seguido.nombre_usuario}'}, 200
 
 class SeguirTitulo(Resource):
-    @token_required
+    @token_required(user_type='user')
     def post(self, current_user, titulo_id):
 
         usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
@@ -289,7 +243,7 @@ class SeguirTitulo(Resource):
         return {'message': 'Título seguido con éxito'}, 200
     
 class ActualizarSeguimiento(Resource):
-    @token_required
+    @token_required(user_type='user')
     def put(self, current_user, titulo_id):
 
         usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
@@ -318,13 +272,11 @@ class ActualizarSeguimiento(Resource):
 usuario_api.add_resource(Login, '/login')
 usuario_api.add_resource(SignUp, '/signup')
 usuario_api.add_resource(UserProfile, '/')
-usuario_api.add_resource(CrearResenia, '/<str:current_user>/titulos/<int:titulo_id>/crearResenia')
-usuario_api.add_resource(EliminarResenia, '/<str:current_user>/resenias/<resenia_id>/eliminar')
-usuario_api.add_resource(Comentar, '/<str:current_user>/<int:resenia_id>/agregarComentario')
-usuario_api.add_resource(EliminarComentario, '/<str:current_user>/comentarios/<comentario_id>')
-usuario_api.add_resource(PuntuarResenia, '/<str:current_user>/resenias/<resenia_id>/puntuar')
-usuario_api.add_resource(EliminarResenia, '/<str:current_user>/resenias/<resenia_id>/eliminarPuntaje')
-usuario_api.add_resource(SeguirUsuario, '/<str:current_user>/<str:seguido_id>')   #No se si estan bien pero algo asi serian
-usuario_api.add_resource(DejarDeSeguir, '/<str:current_user>/<str:seguido_id>')
-usuario_api.add_resource(SeguirTitulo, '/<str:current_user>/<int:titulo_id>')
-usuario_api.add_resource(ActualizarSeguimiento, '/<str:current_user>/<int:titulo_id>')
+#usuario_api.add_resource(Comentar, '/<str:current_user>/<int:resenia_id>/agregarComentario')
+#usuario_api.add_resource(EliminarComentario, '/<str:current_user>/comentarios/<comentario_id>')
+#usuario_api.add_resource(PuntuarResenia, '/<str:current_user>/resenias/<resenia_id>/puntuar')
+#usuario_api.add_resource(EliminarResenia, '/<str:current_user>/resenias/<resenia_id>/eliminarPuntaje')
+#usuario_api.add_resource(SeguirUsuario, '/<str:current_user>/<str:seguido_id>')   #No se si estan bien pero algo asi serian
+#usuario_api.add_resource(DejarDeSeguir, '/<str:current_user>/<str:seguido_id>')
+#usuario_api.add_resource(SeguirTitulo, '/<str:current_user>/<int:titulo_id>')
+#usuario_api.add_resource(ActualizarSeguimiento, '/<str:current_user>/<int:titulo_id>')
