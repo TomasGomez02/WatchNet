@@ -1,5 +1,3 @@
-from abc import ABC
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -30,7 +28,10 @@ class Impresion(db.Model, UserMixin):
     resenia_id = db.Column(db.Integer, nullable=False)
     valor = db.Column(db.Integer, nullable=False)
 
-class Entidad(db.Model, UserMixin, ABC):
+
+class Entidad(db.Model, UserMixin):
+    __abstract__ = True  
+
     id = db.Column(db.Integer, primary_key=True)
     nombre_usuario = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(256), unique=True, nullable=False)

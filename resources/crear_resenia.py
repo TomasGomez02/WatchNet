@@ -3,14 +3,14 @@ from flask_login import current_user
 from flask_restful import Resource
 from datetime import datetime, timezone
 from auth import token_required
-from models.models import db, InfoLogin, Resenia, Usuario
+from models.models import db, Resenia, Usuario, Titulo
 
 class CrearResenia(Resource):
     @token_required
     def post(self, current_user):
         data = request.get_json()
 
-        info_login = InfoLogin.query.filter_by(nombre_usuario=current_user).first()
+        info_login = Usuario.query.filter_by(nombre_usuario=current_user).first()
         if not info_login:
             return {'message': 'Usuario no encontrado'}, 404
 
