@@ -46,7 +46,7 @@ class SignUp(Resource):
             return {'error': 'Falta data'}, 400
 
         if Usuario.query.filter_by(email=email).first():
-            return {'error': 'Email ya está registrado'}, 400
+            return {'error': 'Email ya esta registrado'}, 400
 
         if Usuario.query.filter_by(nombre_usuario=username).first():
             return {'error': 'Username ya existe'}, 400
@@ -57,7 +57,7 @@ class SignUp(Resource):
         db.session.add(new_login)
         db.session.commit()
 
-        return {'message': 'Usuario registrado'}, 201
+        return {'message': 'Usuario registrado'}, 200
     
     def get(self):
         response = make_response(render_template('signup.html'))
