@@ -5,4 +5,4 @@ from flask.templating import render_template
 
 class Index(Resource):
     def get(self):
-        return redirect(url_for('login'))
+        return redirect(url_for('usuario.login'))

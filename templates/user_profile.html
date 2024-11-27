@@ -57,11 +57,8 @@
                 <label for="text">Review Text:</label>
                 <textarea id="text" placeholder="Write your review..." required></textarea><br>
 
-                <label for="titleId">Title ID:</label>
-                <input type="number" id="titleId" placeholder="Enter title ID" required><br>
-
-                <label for="duration">Duration (min):</label>
-                <input type="number" id="duration" placeholder="Enter duration in minutes" required><br>
+                <label for="nombre_contenido">Content Name:</label>
+                <textarea id="nombre_contenido" placeholder="Enter the name of the content" required></textarea><br>
 
                 <input type="hidden" id="current_user" value="{{ current_user }}">
 
@@ -74,62 +71,66 @@
     </div>
 
     <script>
-        function showLoading(show) {
-            const loadingMessage = document.getElementById('message');
-            loadingMessage.className = 'loading';
-            loadingMessage.textContent = show ? 'Processing...' : '';
-        }
-
-        function showMessage(msg, isError) {
-            const messageBox = document.getElementById('message');
-            messageBox.textContent = msg;
-            messageBox.className = isError ? 'error' : 'message';
-        }
-
         function addReview() {
-            const score = document.getElementById('score').value; // Puntuación
-            const text = document.getElementById('text').value; // Texto de la reseña
-            const titleId = document.getElementById('titleId').value; // ID del título
-            const duration = document.getElementById('duration').value; // Duración
-            const current_user = document.getElementById('current_user').value; // Usuario actual
-    
+            const puntaje = document.getElementById('score').value;
+            const texto = document.getElementById('text').value;
+            const nombre_contenido = document.getElementById('nombre_contenido').value;
+            const current_user = document.getElementById('current_user').value;
+
             const button = document.getElementById('addReviewButton');
-            button.disabled = true; // Desactivar botón
-            showLoading(true); // Mostrar indicador de carga
-    
-            const data = {
-                puntuacion: score,
-                texto: text,
-                titulo_id: titleId,
-                duracion: duration
-            };
-    
-            // Hacer la petición POST
-            fetch(`http://127.0.0.1:5000/usuario/${encodeURIComponent(current_user)}/nuevaResenia`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (response.status === 201) {
-                    return response.json();
-                } else {
-                    throw new Error("Failed to add review");
-                }
-            })
-            .then(data => {
-                showMessage("Review added successfully", false);
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                showMessage("Error adding review", true);
-            })
-            .finally(() => {
-                button.disabled = false; // Reactivar botón
-                showLoading(false); // Ocultar indicador de carga
-            });
+            button.disabled = true;
+            showLoading(true);
+
+            // Obtener el ID del contenido antes de enviar la reseña
+            fetch(`http://127.0.0.1:5000/obtener_contenido_id/${encodeURIComponent(nombre_contenido)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.id) {
+                        const reviewData = {
+                            puntuacion: puntaje,
+                            texto: texto,
+                            titulo_id: data.id // Usar el ID del contenido encontrado
+                        };
+
+                        // Enviar la reseña al servidor
+                        return fetch(`http://127.0.0.1:5000/usuario/${encodeURIComponent(current_user)}/nuevaResenia`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(reviewData)
+                        });
+                    } else {
+                        throw new Error("Content not found");
+                    }
+                })
+                .then(response => {
+                    if (response.status === 201) {
+                        showMessage("Review added successfully", false);
+                    } else {
+                        throw new Error("Failed to add review");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    showMessage("Error adding review: " + error.message, true);
+                })
+                .finally(() => {
+                    button.disabled = false;
+                    showLoading(false);
+                });
+        }
+
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.classList.toggle('error', isError);
+        }
+
+        function showLoading(isLoading) {
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = isLoading ? 'block' : 'none';
         }
     </script>
-    
 </body>
+
+
 </html>

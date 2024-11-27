@@ -58,6 +58,7 @@ psycopg2 = "^2.9.10"
 flask-login = "^0.6.3"
 pyjwt = "^2.9.0"
 pytest = "^8.3.3"
+coverage = "^7.6.8"
 
 
 [build-system]
