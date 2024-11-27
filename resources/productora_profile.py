@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from flask import request, make_response
 from flask.templating import render_template
-from app import db, token_required, app
+from auth import token_required
 
 class ProductoraProfile(Resource):
     @token_required
