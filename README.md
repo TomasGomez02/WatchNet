@@ -6,7 +6,7 @@ Integrantes: Tomas Gomez y Victoria Arrudi
 
 ### Idea
 
-WatchNet es una plataforma social en línea centrada en series y películas, donde los usuarios pueden llevar un registro de las series y películas que han visto, escribir reseñas, puntuar títulos y crear listas personalizadas. Además, los usuarios pueden seguir a otros para ver lo que están viendo, leer sus reseñas y participar en discusiones. 
+WatchNet es una plataforma social en línea centrada en series y películas, donde los usuarios pueden llevar un registro de las series y películas que han visto, escribir reseñas y puntuar títulos. Además, los usuarios pueden seguir a otros para ver lo que están viendo, leer sus reseñas y participar en discusiones. 
 
 Algunas de las estrategias pensadas para generar ingresos con WatchNet: 
 
