@@ -10,19 +10,34 @@ usuario_api = Api(usuario_bp)
 
 class Login(Resource):
     """
-    Clase que maneja las operaciones de inicio de sesión de un usuario.
-
+    Manage user login operations.
     """
     def post(self):
         """
-        Método para autenticar a un usuario durante el inicio de sesión.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de error y código de estado 400 si falta información o las credenciales son incorrectas.
-        redirect
-            Si las credenciales son correctas, se redirige al perfil del usuario.
+        Authenticate a user during login.
+        ---
+        tags:
+          - Authentication
+        summary: User login
+        description: Authenticates a user with their email and password.
+        requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: "user@example.com"
+                  password:
+                    type: string
+                    example: "securepassword"
+        responses:
+          302:
+            description: Redirects to the user profile page on successful login.
+          400:
+            description: Missing or incorrect credentials.
         """
         data = request.form
         email = data.get('email')
@@ -43,12 +58,19 @@ class Login(Resource):
     
     def get(self):
         """
-        Método para obtener la página de inicio de sesión.
-
-        Retorna
-        --------
-        response
-            Una respuesta que contiene el HTML de la página de inicio de sesión.
+        Display the login page.
+        ---
+        tags:
+          - Authentication
+        summary: Get login page
+        description: Returns the HTML template for the login page.
+        responses:
+          200:
+            description: HTML content of the login page.
+            content:
+              text/html:
+                schema:
+                  type: string
         """
         response = make_response(render_template('login.html'))
         response.headers["Content-Type"] = "text/html"
@@ -56,37 +78,52 @@ class Login(Resource):
     
     def delete(self):
         """
-        Método para cerrar sesión.
-
-        Retorna
-        -------
-        Response
-            Una redirección a la página principal después de cerrar sesión.
+        Log out the current user.
+        ---
+        tags:
+          - Authentication
+        summary: User logout
+        description: Logs out the currently authenticated user and redirects to the homepage.
+        responses:
+          302:
+            description: Redirect to homepage after logout.
         """
         session.pop('auth_token', None)
         return redirect(url_for('index'))
     
 class SignUp(Resource):
     """
-    Clase que maneja el registro de un nuevo usuario.
-
+    Manage user registration.
     """
     def post(self):
         """
-        Método para registrar un nuevo usuario.
-
-        Retorna
-        -------
-        dict
-            Un diccionario con un mensaje de error si los datos son incorrectos o ya existen, 
-            o un mensaje de éxito si el registro fue exitoso.
-        
-        Excepciones
-        -----------
-        400
-            Si falta algún dato requerido o si el correo electrónico o el nombre de usuario ya están registrados.
-        200
-            Si el usuario fue registrado correctamente.
+        Register a new user.
+        ---
+        tags:
+          - Authentication
+        summary: User registration
+        description: Registers a new user with a username, email, and password.
+        requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: "user@example.com"
+                  username:
+                    type: string
+                    example: "newuser"
+                  password:
+                    type: string
+                    example: "securepassword"
+        responses:
+          200:
+            description: User successfully registered.
+          400:
+            description: Missing or already registered data.
         """
         data = request.form
         email = data.get('email')
@@ -111,29 +148,52 @@ class SignUp(Resource):
         return {'message': 'Usuario registrado'}, 200
     
     def get(self):
+        """
+        Display the registration page.
+        ---
+        tags:
+          - Authentication
+        summary: Get registration page
+        description: Returns the HTML template for the registration page.
+        responses:
+          200:
+            description: HTML content of the registration page.
+            content:
+              text/html:
+                schema:
+                  type: string
+        """
         response = make_response(render_template('signup.html'))
         response.headers["Content-Type"] = "text/html"
         return response
     
 class UserProfile(Resource):
     """
-    Clase que maneja la visualización y actualización del perfil de un usuario.
-
+    Manage user profile.
     """
     @token_required(user_type='user')
     def get(self, current_user):
         """
-        Método para obtener el perfil del usuario.
-
-        Parámetros
-        ----------
-        current_user : str
-            Nombre del usuario actual que está autenticado, extraído del token JWT.
-
-        Retorna
-        -------
-        response : Response
-            Respuesta con la plantilla HTML del perfil del usuario.
+        Get the user profile.
+        ---
+        tags:
+          - Profile
+        summary: Get user profile
+        description: Fetches the profile information for the authenticated user.
+        parameters:
+          - in: header
+            name: Authorization
+            required: true
+            schema:
+              type: string
+            description: Bearer token for user authentication.
+        responses:
+          200:
+            description: HTML content of the user profile page.
+            content:
+              text/html:
+                schema:
+                  type: string
         """
         response = make_response(render_template('user_profile.html', current_user=current_user))
         response.headers["Content-Type"] = "text/html"
@@ -141,26 +201,34 @@ class UserProfile(Resource):
     
 class SeguirAPI(Resource):
     """
-    Clase que maneja la acción de seguir a otro usuario.
-
+    Manage user follow operations.
     """
     @token_required(user_type='user')
     def post(self, current_user):
         """
-        Método para seguir a un usuario.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        seguido_id : int
-            El ID del usuario que se desea seguir.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de éxito y código de estado 201 si el seguimiento fue exitoso.
-            En caso de error, devuelve un mensaje con código de estado 400 o 404 según corresponda.
+        Follow another user.
+        ---
+        tags:
+          - Follows
+        summary: Follow a user
+        description: Allows the authenticated user to follow another user by their ID.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  seguido_id:
+                    type: integer
+                    example: 2
+        responses:
+          200:
+            description: User successfully followed.
+          403:
+            description: Operation not allowed (e.g., trying to follow oneself or already following).
+          404:
+            description: User to follow not found.
         """
         data = request.get_json()
         seguido_id = data['seguido_id']
@@ -186,7 +254,30 @@ class SeguirAPI(Resource):
         return {'message': 'Ahora sigues a este usuario con éxito'}, 200
     
     @token_required(user_type='user')
-    def get(self, current_user):    
+    def get(self, current_user):  
+        """
+        Retrieve the list of followers or followings.
+        ---
+        tags:
+          - Follows
+        summary: Get followers or followings
+        description: Fetches the list of followers or followings for the authenticated user.
+        requestBody:
+          required: false
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [follower, following]
+        responses:
+          200:
+            description: List of followers or followings retrieved.
+          404:
+            description: User not found.
+        """  
         user = Usuario.query.filter_by(nombre_usuario=current_user).first()
         if not user:
             return {'error': 'Usuario actual no existe'}, 404
@@ -202,20 +293,24 @@ class SeguirAPI(Resource):
     @token_required(user_type='user')
     def delete(self, current_user, seguido_id):
         """
-        Método para dejar de seguir a un usuario.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        seguido_id : int
-            El ID del usuario que se desea dejar de seguir.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de éxito y código de estado 201 si el seguimiento fue exitoso.
-            En caso de error, devuelve un mensaje con código de estado 400 o 404 según corresponda.
+        Unfollow a user.
+        ---
+        tags:
+          - Follows
+        summary: Unfollow a user
+        description: Allows the authenticated user to unfollow another user by their ID.
+        parameters:
+          - in: path
+            name: seguido_id
+            required: true
+            schema:
+              type: integer
+            description: The ID of the user to unfollow.
+        responses:
+          200:
+            description: User successfully unfollowed.
+          404:
+            description: User or follow relationship not found.
         """
         seguidor = Usuario.query.filter_by(nombre_usuario=current_user).first()
         if not seguidor:
@@ -236,25 +331,31 @@ class SeguirAPI(Resource):
 
 class SeguirTitulo(Resource):
     """
-    Clase que maneja la accion de seguir un titulo.
+    Manage following titles.
     """
     @token_required(user_type='user')
     def post(self, current_user, titulo_id):
         """
-        Método para seguir un título.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        titulo_id : int
-            El ID del título que se desea seguir.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de éxito y código de estado 200 si el seguimiento fue exitoso.
-            En caso de error, devuelve un mensaje con código de estado 400 o 404 según corresponda.
+        Follow a title.
+        ---
+        tags:
+          - Titles
+        summary: Follow a title
+        description: Allows the authenticated user to follow a specific title by its ID.
+        parameters:
+          - in: path
+            name: titulo_id
+            required: true
+            schema:
+              type: integer
+            description: The ID of the title to follow.
+        responses:
+          200:
+            description: Title successfully followed.
+          400:
+            description: Already following the title.
+          404:
+            description: Title not found.
         """
         usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
 
@@ -283,19 +384,39 @@ class SeguirTitulo(Resource):
     @token_required(user_type='user')
     def put(self, current_user, titulo_id):
         """
-        Actualiza el estado y la cantidad vista de un seguimiento de título.
-
-        Parámetros
-        -----------
-        current_user : str
-            Nombre de usuario autenticado.
-        titulo_id : int
-            ID del título cuyo seguimiento se quiere actualizar.
-
-        Retorna
-        --------
-        dict
-            Mensaje de éxito o error con el código de estado correspondiente.
+        Update title follow status.
+        ---
+        tags:
+          - Titles
+        summary: Update title follow
+        description: Updates the status and view count for a title being followed by the authenticated user.
+        parameters:
+          - in: path
+            name: titulo_id
+            required: true
+            schema:
+              type: integer
+            description: The ID of the title to update.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estado:
+                    type: integer
+                    example: 1
+                    description: Status of the follow (1 = active, 0 = completed).
+                  cantidad_visto:
+                    type: integer
+                    example: 10
+                    description: Number of episodes watched.
+        responses:
+          200:
+            description: Follow status updated successfully.
+          404:
+            description: Title not found or not being followed.
         """
         usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
 

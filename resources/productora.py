@@ -9,23 +9,36 @@ productora_api = Api(productora_bp)
 
 class Login(Resource):
     """
-    Clase que maneja las operaciones de inicio de sesión para una productora.
-
+    Handles login operations for producers.
     """
     def post(self):
         """
-        Método para iniciar sesión.
-
-        Retorna
-        -------
-        dict
-            Un diccionario con un mensaje de error si los datos son incorrectos o faltan, o una redirección 
-            a la página de perfil de la productora si el inicio de sesión es exitoso.
-        
-        Excepciones
-        -----------
-        400
-            Si el correo electrónico o la contraseña están vacíos o son incorrectos.
+        Log in a producer.
+        ---
+        tags:
+          - Producers
+        summary: Log in a producer
+        description: Authenticate a producer using their email and password.
+        requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: producer@example.com
+                  password:
+                    type: string
+                    example: securepassword
+        responses:
+          302:
+            description: Redirect to the producer profile page after successful login.
+          400:
+            description: Missing or incorrect login data.
+          500:
+            description: Server error.
         """
         data = request.form
         email = data.get('email')
@@ -46,12 +59,21 @@ class Login(Resource):
     
     def get(self):
         """
-        Método para obtener la página de inicio de sesión.
-
-        Retorna
-        -------
-        Response
-            Una respuesta que contiene el HTML de la página de inicio de sesión.
+        Display the login page.
+        ---
+        tags:
+          - Producers
+        summary: Display the login page
+        description: Returns the HTML template for the producer login page.
+        responses:
+          200:
+            description: HTML content of the login page.
+            content:
+              text/html:
+                schema:
+                  type: string
+          500:
+            description: Server error.
         """
         response = make_response(render_template('login_prod.html'))
         response.headers["Content-Type"] = "text/html"
@@ -59,37 +81,56 @@ class Login(Resource):
     
     def delete(self):
         """
-        Método para cerrar sesión.
-
-        Retorna
-        -------
-        Response
-            Una redirección a la página principal después de cerrar sesión.
+        Log out a producer.
+        ---
+        tags:
+          - Producers
+        summary: Log out a producer
+        description: Logs out the producer and clears their session token.
+        responses:
+          302:
+            description: Redirect to the home page after logout.
+          500:
+            description: Server error.
         """
         session.pop('auth_token', None)
         return redirect(url_for('index'))
     
 class SignUp(Resource):
     """
-    Clase que maneja el registro de una nueva productora.
-
+    Handles registration of a new producer.
     """
     def post(self):
         """
-        Método para registrar una nueva productora.
-
-        Retorna
-        -------
-        dict
-            Un diccionario con un mensaje de error si los datos son incorrectos o ya existen, 
-            o un mensaje de éxito si el registro fue exitoso.
-        
-        Excepciones
-        -----------
-        400
-            Si falta algún dato requerido o si el correo electrónico o el nombre de usuario ya están registrados.
-        200
-            Si el usuario fue registrado correctamente.
+        Register a new producer.
+        ---
+        tags:
+          - Producers
+        summary: Register a new producer
+        description: Register a new producer with email, username, and password.
+        requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: producer@example.com
+                  username:
+                    type: string
+                    example: newproducer
+                  password:
+                    type: string
+                    example: securepassword
+        responses:
+          200:
+            description: Producer successfully registered.
+          400:
+            description: Missing data or duplicate email/username.
+          500:
+            description: Server error.
         """
         data = request.form
         email = data.get('email')
@@ -115,12 +156,21 @@ class SignUp(Resource):
     
     def get(self):
         """
-        Método para obtener la página de registro.
-
-        Retorna
-        -------
-        Response
-            Una respuesta que contiene el HTML de la página de registro.
+        Display the signup page.
+        ---
+        tags:
+          - Producers
+        summary: Display the signup page
+        description: Returns the HTML template for the producer signup page.
+        responses:
+          200:
+            description: HTML content of the signup page.
+            content:
+              text/html:
+                schema:
+                  type: string
+          500:
+            description: Server error.
         """
         response = make_response(render_template('signup_prod.html'))
         response.headers["Content-Type"] = "text/html"
@@ -128,23 +178,35 @@ class SignUp(Resource):
     
 class ProductoraProfile(Resource):
     """
-    Clase que maneja la visualización y actualización del perfil de una productora.
-
+    Handles the producer's profile view and updates.
     """
     @token_required(user_type='producer')
     def get(self, current_user):
         """
-        Método para obtener el perfil de la productora.
-
-        Parámetros
-        ----------
-        current_user : str
-            Nombre del usuario actual que está autenticado, extraído del token JWT.
-
-        Retorna
-        -------
-        response : Response
-            Respuesta con la plantilla HTML del perfil de la productora.
+        Get the producer profile page.
+        ---
+        tags:
+          - Producers
+        summary: Get the producer profile
+        description: Returns the HTML template for the producer profile page.
+        parameters:
+          - in: header
+            name: Authorization
+            required: true
+            schema:
+              type: string
+            description: Bearer token for producer authentication.
+        responses:
+          200:
+            description: HTML content of the producer profile page.
+            content:
+              text/html:
+                schema:
+                  type: string
+          401:
+            description: Unauthorized access.
+          500:
+            description: Server error.
         """
         response = make_response(render_template('productora_profile.html', current_user=current_user))
         response.headers["Content-Type"] = "text/html"
@@ -152,12 +214,17 @@ class ProductoraProfile(Resource):
     
     def post(self):
         """
-        Método para manejar una solicitud POST en el perfil de la productora.
-
-        Retorna
-        -------
-        dict
-            Un diccionario con un mensaje de confirmación y el código de estado HTTP 201.
+        Update the producer profile.
+        ---
+        tags:
+          - Producers
+        summary: Update the producer profile
+        description: Handles updates to the producer's profile data.
+        responses:
+          201:
+            description: Profile successfully updated.
+          500:
+            description: Server error.
         """
         return {'message': 'hi'}, 201
     

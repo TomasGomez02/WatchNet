@@ -7,6 +7,7 @@ from resources.productora import productora_bp
 from resources.tituloAPI import titulo_bp
 from resources.index import Index
 from models.models import db
+from flasgger import Swagger
 
 try:
     from config import DB_URI, TOKEN_KEY
@@ -34,6 +35,7 @@ def create_app(local=False, local_path=''):
     """
     app = Flask(__name__)
     api = Api(app)
+    swagger = Swagger(app)
 
     app.register_blueprint(usuario_bp, url_prefix='/user')
     app.register_blueprint(productora_bp, url_prefix='/producer')
