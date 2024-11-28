@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_restful import Api
 from resources.usuario import usuario_bp
@@ -5,7 +7,12 @@ from resources.productora import productora_bp
 from resources.tituloAPI import titulo_bp
 from resources.index import Index
 from models.models import db
-from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE, TOKEN_KEY
+
+try:
+    from config import DB_URI, TOKEN_KEY
+except ModuleNotFoundError:
+    DB_URI = os.environ.get('DB_URI', "sqlite:///database.db")
+    TOKEN_KEY = os.environ.get('TOKEN_KEY', "please-set-up-a-proper-key")
 
 def create_app(local=False, local_path=''):
     """
@@ -34,7 +41,7 @@ def create_app(local=False, local_path=''):
     api.add_resource(Index, '/')
 
     if not local:
-        URI = f'postgresql://{DB_DATABASE}.{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}'
+        URI = DB_URI
     else:
         URI = f'sqlite:///{local_path}'
         

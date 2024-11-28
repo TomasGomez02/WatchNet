@@ -1,9 +1,13 @@
 from datetime import datetime, timedelta, timezone
 from typing import Literal
+import os
 
 from flask import jsonify, make_response, session
 import jwt
-from config import TOKEN_KEY
+try:
+    from config import TOKEN_KEY
+except ModuleNotFoundError:
+    TOKEN_KEY = os.environ.get('TOKEN_KEY', "please-set-up-a-proper-key")
 
 def generate_token(username, user_type: Literal['user', 'producer']):
     """
