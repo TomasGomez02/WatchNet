@@ -1,99 +1,17 @@
-from datetime import datetime, timezone
 from flask import request, make_response, redirect, url_for, session, Blueprint
 from flask_restful import Resource, Api
 from flask.templating import render_template
-from models.models import Comentario, Impresion, Relacion, Reseña, Seguimiento, Titulo, db, Usuario
+from models.models import  Episodio, EstadoTitulo, Relacion, Reseña, Seguimiento, Titulo, DataBase, Usuario
 from auth import generate_token, token_required
 
-usuario_bp = Blueprint('usuario', __name__)
-usuario_api = Api(usuario_bp)
+usuarioAPI_bp = Blueprint('usuarioAPI', __name__)
+usuario_api = Api(usuarioAPI_bp)
 
-class Login(Resource):
+db = DataBase().db
+
+class UserAPI(Resource):
     """
     Manage user login operations.
-    """
-    def post(self):
-        """
-        Authenticate a user during login.
-        ---
-        tags:
-          - Authentication
-        summary: User login
-        description: Authenticates a user with their email and password.
-        requestBody:
-          required: true
-          content:
-            application/x-www-form-urlencoded:
-              schema:
-                type: object
-                properties:
-                  email:
-                    type: string
-                    example: "user@example.com"
-                  password:
-                    type: string
-                    example: "securepassword"
-        responses:
-          302:
-            description: Redirects to the user profile page on successful login.
-          400:
-            description: Missing or incorrect credentials.
-        """
-        data = request.form
-        email = data.get('email')
-        password = data.get('password')
-
-        if not email or not password:
-            return {'error': 'Falta data'}, 400
-
-        login_info = Usuario.query.filter_by(email=email).first()
-
-        if not login_info or not login_info.check_password(password):
-            return {'error': 'Login info incorrect.'}, 400
-        
-        token = generate_token(login_info.nombre_usuario, 'user')
-        session['auth_token'] = token
-
-        return redirect(url_for('usuario.userprofile', current_user=login_info.nombre_usuario))
-    
-    def get(self):
-        """
-        Display the login page.
-        ---
-        tags:
-          - Authentication
-        summary: Get login page
-        description: Returns the HTML template for the login page.
-        responses:
-          200:
-            description: HTML content of the login page.
-            content:
-              text/html:
-                schema:
-                  type: string
-        """
-        response = make_response(render_template('login.html'))
-        response.headers["Content-Type"] = "text/html"
-        return response
-    
-    def delete(self):
-        """
-        Log out the current user.
-        ---
-        tags:
-          - Authentication
-        summary: User logout
-        description: Logs out the currently authenticated user and redirects to the homepage.
-        responses:
-          302:
-            description: Redirect to homepage after logout.
-        """
-        session.pop('auth_token', None)
-        return redirect(url_for('index'))
-    
-class SignUp(Resource):
-    """
-    Manage user registration.
     """
     def post(self):
         """
@@ -125,10 +43,10 @@ class SignUp(Resource):
           400:
             description: Missing or already registered data.
         """
-        data = request.form
-        email = data.get('email')
-        password = data.get('password')
-        username = data.get('username')
+        data = request.get_json()
+        email = data['email']
+        password = data['password']
+        username = data['username']
 
         if not username or not email or not password:
             return {'error': 'Falta data'}, 400
@@ -145,59 +63,69 @@ class SignUp(Resource):
         db.session.add(new_login)
         db.session.commit()
 
+        token = generate_token(new_login.nombre_usuario, 'user')
+        session['auth_token'] = token
+
         return {'message': 'Usuario registrado'}, 200
     
     def get(self):
         """
-        Display the registration page.
+        Authenticate a user during login.
         ---
         tags:
           - Authentication
-        summary: Get registration page
-        description: Returns the HTML template for the registration page.
+        summary: User login
+        description: Authenticates a user with their email and password.
+        requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: "user@example.com"
+                  password:
+                    type: string
+                    example: "securepassword"
         responses:
-          200:
-            description: HTML content of the registration page.
-            content:
-              text/html:
-                schema:
-                  type: string
+          302:
+            description: Redirects to the user profile page on successful login.
+          400:
+            description: Missing or incorrect credentials.
         """
-        response = make_response(render_template('signup.html'))
-        response.headers["Content-Type"] = "text/html"
-        return response
+        data = request.get_json()
+        email = data['email']
+        password = data['password']
+
+        if not email or not password:
+            return {'error': 'Falta data'}, 403
+
+        login_info = Usuario.query.filter_by(email=email).first()
+
+        if not login_info or not login_info.check_password(password):
+            return {'error': 'Login info incorrect.'}, 403
+        
+        token = generate_token(login_info.nombre_usuario, 'user')
+        session['auth_token'] = token
+
+        return {'message': 'User verified successfully'}, 200
     
-class UserProfile(Resource):
-    """
-    Manage user profile.
-    """
-    @token_required(user_type='user')
-    def get(self, current_user):
+    def delete(self):
         """
-        Get the user profile.
+        Log out the current user.
         ---
         tags:
-          - Profile
-        summary: Get user profile
-        description: Fetches the profile information for the authenticated user.
-        parameters:
-          - in: header
-            name: Authorization
-            required: true
-            schema:
-              type: string
-            description: Bearer token for user authentication.
+          - Authentication
+        summary: User logout
+        description: Logs out the currently authenticated user and redirects to the homepage.
         responses:
-          200:
-            description: HTML content of the user profile page.
-            content:
-              text/html:
-                schema:
-                  type: string
+          302:
+            description: Redirect to homepage after logout.
         """
-        response = make_response(render_template('user_profile.html', current_user=current_user))
-        response.headers["Content-Type"] = "text/html"
-        return response
+        session.pop('auth_token', None)
+        return redirect(url_for('index'))
     
 class SeguirAPI(Resource):
     """
@@ -329,12 +257,12 @@ class SeguirAPI(Resource):
 
         return {'message': f'Has dejado de seguir a {seguido.nombre_usuario}'}, 200
 
-class SeguirTitulo(Resource):
+class WatchlistAPI(Resource):
     """
     Manage following titles.
     """
     @token_required(user_type='user')
-    def post(self, current_user, titulo_id):
+    def post(self, current_user, user):
         """
         Follow a title.
         ---
@@ -357,22 +285,37 @@ class SeguirTitulo(Resource):
           404:
             description: Title not found.
         """
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
+        if current_user != user:
+            return {'error': 'Access denied'}, 401
+        
+        usuario = Usuario.query.filter_by(nombre_usuario=user).first()
+        data = request.get_json()
+        if 'titulo_id' not in data:
+            return {'error': 'Title is required'}, 403
+        titulo_id = data['titulo_id']
 
         titulo = Titulo.query.filter_by(id=titulo_id).first()
         if not titulo:
-            return {'message': 'Título no encontrado'}, 404
+            return {'error': 'Título no encontrado'}, 404
         
         seguimiento = Seguimiento.query.filter_by(usuario_id=usuario.id, titulo_id=titulo.id).first()
 
         if seguimiento:
-            return {'message': 'Ya estás siguiendo este título'}, 400  
+            return {'message': 'Ya estás siguiendo este título'}, 403
+        
+        estado = EstadoTitulo(data['estado']) if 'estado' in data else EstadoTitulo.SIN_COMENZAR
+        cantidad_visto = data['cantidad_visto'] if 'cantidad_visto' in data else 0
+
+        episodios = Episodio.query.filter_by(titulo_id=titulo.id)
+
+        if cantidad_visto > episodios.count():
+            return {'error': 'Invalid cantidad_visto'}, 403
         
         nuevo_seguimiento = Seguimiento(
             usuario_id=usuario.id,
-            estado=1,  # 1=activo, 0=terminado
+            estado=estado,  # 1=activo, 0=terminado
             resenia_id=None,  
-            cantidad_visto=0,  # Inicialmente 0
+            cantidad_visto=cantidad_visto,
             titulo_id=titulo.id
         )
 
@@ -441,27 +384,47 @@ class SeguirTitulo(Resource):
     
 class PerfilUsuario(Resource):
     """
-    Clase para gestionar el perfil de un usuario. 
-    Permite consultar información personal, reseñas y series seguidas.
-
+    Class to manage a user's profile. 
+    Allows viewing, updating, and deleting specific sections of the profile.
     """
-    @token_required
-    def get(self, current_user, seccion=None):
+    def get(self, user, seccion=None):
         """
-        Metodo para obtener información del perfil del usuario.
-
-        Parámetros
-        -----------
-        current_user (str): El nombre de usuario autenticado.
-        seccion (str, opcional): Sección del perfil a consultar. 
-            Valores permitidos: 'resenias', 'titulos', 'info', o None para obtener todo el perfil.
-
-        Retorno
-        -----------
-        dict: Información de la sección solicitada o del perfil completo.
-        int: Código de estado HTTP.
+        Retrieve user profile information.
+        ---
+        tags:
+          - Profile
+        summary: Get user profile section
+        description: Fetches the requested section of the authenticated user's profile.
+        parameters:
+          - in: query
+            name: seccion
+            required: false
+            schema:
+              type: string
+            description: Section of the profile to retrieve. Allowed values: 'resenias', 'titulos', 'info', or leave empty to retrieve the full profile.
+          - in: header
+            name: Authorization
+            required: true
+            schema:
+              type: string
+            description: Bearer token for user authentication.
+        responses:
+          200:
+            description: Profile section retrieved successfully.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      description: Data from the requested profile section.
+          400:
+            description: Invalid section specified.
+          404:
+            description: User not found.
         """
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
+        usuario = Usuario.query.filter_by(nombre_usuario=user).first()
 
         if seccion == 'resenias':
             return self.obtener_resenias(usuario.id)
@@ -492,15 +455,47 @@ class PerfilUsuario(Resource):
 
     def obtener_titulos(self, usuario_id):
         """
-        Obtiene todas los titulos seguidos por el usuario.
-
-        Parámetros
-        --------
-        usuario_id (int): ID del usuario.
-
-        Retorno
-        --------
-        dict: Titulos seguidos por el usuario.
+        Retrieve all reviews made by the user.
+        ---
+        tags:
+        - Reviews
+        summary: Get user reviews
+        description: Fetches all reviews created by the specified user.
+        parameters:
+        - in: path
+            name: usuario_id
+            required: true
+            schema:
+            type: integer
+            description: The ID of the user whose reviews are being requested.
+        responses:
+        200:
+            description: User reviews retrieved successfully.
+            content:
+            application/json:
+                schema:
+                type: object
+                properties:
+                    reseñas:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                        id:
+                            type: integer
+                            description: Review ID.
+                        puntuacion:
+                            type: integer
+                            description: Review score.
+                        texto:
+                            type: string
+                            description: Review text.
+                        fecha:
+                            type: string
+                            format: date-time
+                            description: Publication date of the review.
+        404:
+            description: No reviews found for the user.
         """
         series = Seguimiento.query.filter_by(usuario_id=usuario_id).all()
         series_data = [{'titulo_id': s.titulo_id, 'estado': s.estado, 'cantidad_visto': s.cantidad_visto} for s in series]
@@ -508,15 +503,39 @@ class PerfilUsuario(Resource):
 
     def obtener_info(self, usuario_id):
         """
-        Obtiene la informacion del usuario.
-
-        Parámetros
-        --------
-        usuario_id (int): ID del usuario.
-
-        Retorno
-        --------
-        dict: Informacion del usuario.
+        Retrieve user information.
+        ---
+        tags:
+        - User
+        summary: Get user information
+        description: Fetches basic information about the specified user, including username and email.
+        parameters:
+        - in: path
+            name: usuario_id
+            required: true
+            schema:
+            type: integer
+            description: The ID of the user whose information is being requested.
+        responses:
+        200:
+            description: User information retrieved successfully.
+            content:
+            application/json:
+                schema:
+                type: object
+                properties:
+                    usuario:
+                    type: object
+                    properties:
+                        nombre_usuario:
+                        type: string
+                        description: The user's username.
+                        email:
+                        type: string
+                        format: email
+                        description: The user's email address.
+        404:
+            description: User not found.
         """
         usuario = Usuario.query.get(usuario_id)
         info_data = {'nombre_usuario': usuario.nombre_usuario, 'email': usuario.email}
@@ -524,15 +543,62 @@ class PerfilUsuario(Resource):
 
     def obtener_perfil_completo(self, usuario_id):
         """
-        Obtiene toda la informacion correspondiente al perfil del usuario.
-
-        Parámetros
-        --------
-        usuario_id (int): ID del usuario.
-
-        Retorno
-        --------
-        dict: Informacion del perfil del usuario.
+        Retrieve the complete user profile.
+        ---
+        tags:
+        - Profile
+        summary: Get complete user profile
+        description: Fetches all available information related to the user's profile, including personal details, reviews, and followed titles.
+        parameters:
+        - in: path
+            name: usuario_id
+            required: true
+            schema:
+            type: integer
+            description: The ID of the user whose complete profile is being requested.
+        responses:
+        200:
+            description: Complete user profile retrieved successfully.
+            content:
+            application/json:
+                schema:
+                type: object
+                properties:
+                    perfil:
+                    type: object
+                    properties:
+                        nombre_usuario:
+                        type: string
+                        description: The user's username.
+                        email:
+                        type: string
+                        format: email
+                        description: The user's email address.
+                        reseñas:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                            id:
+                                type: integer
+                                description: Review ID.
+                            puntuacion:
+                                type: integer
+                                description: Review score.
+                            texto:
+                                type: string
+                                description: Review text.
+                            fecha:
+                                type: string
+                                format: date-time
+                                description: Review publication date.
+                        titulos_seguidos:
+                        type: array
+                        items:
+                            type: string
+                            description: Titles followed by the user.
+        404:
+            description: User not found.
         """
         info = self.obtener_info(usuario_id)
         resenias = self.obtener_resenias(usuario_id)
@@ -544,10 +610,9 @@ class PerfilUsuario(Resource):
             'series_vistas': series['series_vistas']
         }, 200
 
-usuario_api.add_resource(Login, '/login')
-usuario_api.add_resource(SignUp, '/signup')
-usuario_api.add_resource(UserProfile, '/')
+usuario_api.add_resource(UserAPI, '/')
 usuario_api.add_resource(SeguirAPI, '/follow',
                          '/follow/<int:seguido_id>')
-#usuario_api.add_resource(SeguirTitulo, '/<str:current_user>/<int:titulo_id>')
-#usuario_api.add_resource(ActualizarSeguimiento, '/<str:current_user>/<int:titulo_id>')
+usuario_api.add_resource(WatchlistAPI, '/<string:user>/watchlist',
+                         '/<string:user>/watchlist/<int:watch_id>')
+usuario_api.add_resource(PerfilUsuario, '/<string:user>/perfil')

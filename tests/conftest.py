@@ -4,12 +4,12 @@ import tempfile
 from datetime import date
 import pytest
 
-
 # Add the root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from models.models import TipoTitulo
-from app import create_app, db
+from models.models import TipoTitulo, DataBase
+from app import create_app
+
 
 @pytest.fixture()
 def app():
@@ -22,6 +22,7 @@ def app():
 
     yield app
 
+    db = DataBase().db
     with app.app_context():
         db.session.remove()
         db.engine.dispose()
@@ -43,13 +44,13 @@ class AuthActions(object):
 
     def signup(self, email='test', username='test', password='test'):
         return self._client.post(
-            f'/{self._type}/signup',
+            f'/api/{self._type}/signup',
             data={'email': email, 'username': username, 'password': password}
         )
 
     def login(self, email='test', password='test'):
         return self._client.post(
-            f'/{self._type}/login',
+            f'/api/{self._type}/login',
             data={'email': email, 'password': password}
         )
     
@@ -58,7 +59,7 @@ class AuthActions(object):
         self.login(email, password)
     
     def logout(self):
-        return self._client.delete(f'/{self._type}/login')
+        return self._client.delete(f'/api/{self._type}/login')
     
 class TitleActions:
     def __init__(self, client):

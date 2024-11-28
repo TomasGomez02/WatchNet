@@ -2,11 +2,13 @@ import os
 
 from flask import Flask
 from flask_restful import Api
-from resources.usuario import usuario_bp
-from resources.productora import productora_bp
+from resources.usuario import usuarioAPI_bp
+from resources.productora import productoraAPI_bp
 from resources.tituloAPI import titulo_bp
+from front.user import usuario_bp
+from front.producer import producer_bp
 from resources.index import Index
-from models.models import db
+from models.models import DataBase
 from flasgger import Swagger
 
 try:
@@ -14,6 +16,8 @@ try:
 except ModuleNotFoundError:
     DB_URI = os.getenv('DB_URI', "sqlite:///database.db")
     TOKEN_KEY = os.getenv('TOKEN_KEY', "please-set-up-a-proper-key")
+
+db = DataBase().db
 
 def create_app(local=False, local_path=''):
     """
@@ -38,7 +42,9 @@ def create_app(local=False, local_path=''):
     swagger = Swagger(app)
 
     app.register_blueprint(usuario_bp, url_prefix='/user')
-    app.register_blueprint(productora_bp, url_prefix='/producer')
+    app.register_blueprint(producer_bp, url_prefix='/producer')
+    app.register_blueprint(usuarioAPI_bp, url_prefix='/api/user')
+    app.register_blueprint(productoraAPI_bp, url_prefix='/api/producer')
     app.register_blueprint(titulo_bp, url_prefix='/api/titulo')
     api.add_resource(Index, '/')
 
