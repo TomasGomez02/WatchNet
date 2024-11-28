@@ -7,7 +7,7 @@ import jwt
 try:
     from config import TOKEN_KEY
 except ModuleNotFoundError:
-    TOKEN_KEY = os.environ.get('TOKEN_KEY', "please-set-up-a-proper-key")
+    TOKEN_KEY = os.getenv('TOKEN_KEY', "please-set-up-a-proper-key")
 
 def generate_token(username, user_type: Literal['user', 'producer']):
     """

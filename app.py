@@ -11,8 +11,8 @@ from models.models import db
 try:
     from config import DB_URI, TOKEN_KEY
 except ModuleNotFoundError:
-    DB_URI = os.environ.get('DB_URI', "sqlite:///database.db")
-    TOKEN_KEY = os.environ.get('TOKEN_KEY', "please-set-up-a-proper-key")
+    DB_URI = os.getenv('DB_URI', "sqlite:///database.db")
+    TOKEN_KEY = os.getenv('TOKEN_KEY', "please-set-up-a-proper-key")
 
 def create_app(local=False, local_path=''):
     """
