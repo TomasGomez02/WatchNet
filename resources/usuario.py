@@ -384,25 +384,46 @@ class WatchlistAPI(Resource):
     
 class PerfilUsuario(Resource):
     """
-    Clase para gestionar el perfil de un usuario. 
-    Permite consultar información personal, reseñas y series seguidas.
-
+    Class to manage a user's profile. 
+    Allows viewing, updating, and deleting specific sections of the profile.
     """
     @token_required
     def get(self, current_user, seccion=None):
         """
-        Metodo para obtener información del perfil del usuario.
-
-        Parámetros
-        -----------
-        current_user (str): El nombre de usuario autenticado.
-        seccion (str, opcional): Sección del perfil a consultar. 
-            Valores permitidos: 'resenias', 'titulos', 'info', o None para obtener todo el perfil.
-
-        Retorno
-        -----------
-        dict: Información de la sección solicitada o del perfil completo.
-        int: Código de estado HTTP.
+        Retrieve user profile information.
+        ---
+        tags:
+          - Profile
+        summary: Get user profile section
+        description: Fetches the requested section of the authenticated user's profile.
+        parameters:
+          - in: query
+            name: seccion
+            required: false
+            schema:
+              type: string
+            description: Section of the profile to retrieve. Allowed values: 'resenias', 'titulos', 'info', or leave empty to retrieve the full profile.
+          - in: header
+            name: Authorization
+            required: true
+            schema:
+              type: string
+            description: Bearer token for user authentication.
+        responses:
+          200:
+            description: Profile section retrieved successfully.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      description: Data from the requested profile section.
+          400:
+            description: Invalid section specified.
+          404:
+            description: User not found.
         """
         usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
 
@@ -435,15 +456,47 @@ class PerfilUsuario(Resource):
 
     def obtener_titulos(self, usuario_id):
         """
-        Obtiene todas los titulos seguidos por el usuario.
-
-        Parámetros
-        --------
-        usuario_id (int): ID del usuario.
-
-        Retorno
-        --------
-        dict: Titulos seguidos por el usuario.
+        Retrieve all reviews made by the user.
+        ---
+        tags:
+        - Reviews
+        summary: Get user reviews
+        description: Fetches all reviews created by the specified user.
+        parameters:
+        - in: path
+            name: usuario_id
+            required: true
+            schema:
+            type: integer
+            description: The ID of the user whose reviews are being requested.
+        responses:
+        200:
+            description: User reviews retrieved successfully.
+            content:
+            application/json:
+                schema:
+                type: object
+                properties:
+                    reseñas:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                        id:
+                            type: integer
+                            description: Review ID.
+                        puntuacion:
+                            type: integer
+                            description: Review score.
+                        texto:
+                            type: string
+                            description: Review text.
+                        fecha:
+                            type: string
+                            format: date-time
+                            description: Publication date of the review.
+        404:
+            description: No reviews found for the user.
         """
         series = Seguimiento.query.filter_by(usuario_id=usuario_id).all()
         series_data = [{'titulo_id': s.titulo_id, 'estado': s.estado, 'cantidad_visto': s.cantidad_visto} for s in series]
@@ -451,15 +504,39 @@ class PerfilUsuario(Resource):
 
     def obtener_info(self, usuario_id):
         """
-        Obtiene la informacion del usuario.
-
-        Parámetros
-        --------
-        usuario_id (int): ID del usuario.
-
-        Retorno
-        --------
-        dict: Informacion del usuario.
+        Retrieve user information.
+        ---
+        tags:
+        - User
+        summary: Get user information
+        description: Fetches basic information about the specified user, including username and email.
+        parameters:
+        - in: path
+            name: usuario_id
+            required: true
+            schema:
+            type: integer
+            description: The ID of the user whose information is being requested.
+        responses:
+        200:
+            description: User information retrieved successfully.
+            content:
+            application/json:
+                schema:
+                type: object
+                properties:
+                    usuario:
+                    type: object
+                    properties:
+                        nombre_usuario:
+                        type: string
+                        description: The user's username.
+                        email:
+                        type: string
+                        format: email
+                        description: The user's email address.
+        404:
+            description: User not found.
         """
         usuario = Usuario.query.get(usuario_id)
         info_data = {'nombre_usuario': usuario.nombre_usuario, 'email': usuario.email}
@@ -467,15 +544,62 @@ class PerfilUsuario(Resource):
 
     def obtener_perfil_completo(self, usuario_id):
         """
-        Obtiene toda la informacion correspondiente al perfil del usuario.
-
-        Parámetros
-        --------
-        usuario_id (int): ID del usuario.
-
-        Retorno
-        --------
-        dict: Informacion del perfil del usuario.
+        Retrieve the complete user profile.
+        ---
+        tags:
+        - Profile
+        summary: Get complete user profile
+        description: Fetches all available information related to the user's profile, including personal details, reviews, and followed titles.
+        parameters:
+        - in: path
+            name: usuario_id
+            required: true
+            schema:
+            type: integer
+            description: The ID of the user whose complete profile is being requested.
+        responses:
+        200:
+            description: Complete user profile retrieved successfully.
+            content:
+            application/json:
+                schema:
+                type: object
+                properties:
+                    perfil:
+                    type: object
+                    properties:
+                        nombre_usuario:
+                        type: string
+                        description: The user's username.
+                        email:
+                        type: string
+                        format: email
+                        description: The user's email address.
+                        reseñas:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                            id:
+                                type: integer
+                                description: Review ID.
+                            puntuacion:
+                                type: integer
+                                description: Review score.
+                            texto:
+                                type: string
+                                description: Review text.
+                            fecha:
+                                type: string
+                                format: date-time
+                                description: Review publication date.
+                        titulos_seguidos:
+                        type: array
+                        items:
+                            type: string
+                            description: Titles followed by the user.
+        404:
+            description: User not found.
         """
         info = self.obtener_info(usuario_id)
         resenias = self.obtener_resenias(usuario_id)

@@ -22,7 +22,33 @@ database = DataBase()
 db = database.db
 
 class Serializable:
+    """
+    Class used to represent an entity that can be serialized into a dictionary.
+    ---
+    tags:
+    - Serialization
+    summary: Represents a serializable entity that converts its attributes into a dictionary.
+    description: This class provides a method to serialize an object by converting its attributes into a dictionary format. It handles special cases for date and `TipoTitulo` types, converting them to appropriate formats.
+    """
+
     def serialize(self):
+        """
+        Converts the object's attributes into a dictionary, with special handling for `date` and `TipoTitulo` types.
+        ---
+        tags:
+        - Serialization
+        summary: Serializes the object's attributes into a dictionary format.
+        description: This method iterates over all columns of the object and converts their values into a dictionary. Special handling is applied to `date` types, converting them to ISO 8601 format, and `TipoTitulo` types, converting them to their corresponding string values.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        dict
+            A dictionary where the keys are the attribute names and the values are the corresponding attribute values, with special formatting for `date` and `TipoTitulo`.
+        """
         data = {}
         for column in self.__table__.columns:
             value = getattr(self, column.name)
@@ -35,22 +61,25 @@ class Serializable:
 
 class Comentario(db.Model, Serializable):
     """
-    Modelo que representa los comentarios realizados por usuarios en reseñas.
+    Model representing comments made by users on reviews.
+    ---
+    tags:
+      - Comments
+    summary: Represents user comments on reviews
+    description: This model stores information about user comments associated with reviews. Each comment is linked to a specific user and review, with details such as the comment content, publication date, and user information.
 
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     id : int
-        ID único del comentario.
+        The unique identifier of the comment.
     texto : str
-        Contenido del comentario.
+        The content of the comment.
     usuario_id : int
-        ID del usuario que hizo el comentario.
+        The ID of the user who made the comment.
     resenia_id : int
-        ID de la reseña asociada al comentario.
+        The ID of the review associated with the comment.
     fecha_publicacion : date
-        Fecha en la que se publicó el comentario.
+        The date when the comment was published.
     """
     __tablename__= 'Comentarios'
     id = db.Column(db.Integer, primary_key=True)
@@ -61,24 +90,27 @@ class Comentario(db.Model, Serializable):
 
 class Episodio(db.Model, Serializable):
     """
-    Modelo que representa un episodio de una serie.
+    Model representing an episode of a series.
+    ---
+    tags:
+      - Episodes
+    summary: Represents an episode in a series
+    description: This model stores information about episodes within a series, including the episode's title, duration, order, release date, and the series to which it belongs.
 
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     id : int
-        ID único del episodio.
+        The unique identifier of the episode.
     titulo : str
-        Título del episodio.
+        The title of the episode.
     duracion : int
-        Duración del episodio en minutos.
+        The duration of the episode in minutes.
     orden : int
-        Orden del episodio dentro de la serie.
+        The order of the episode within the series.
     fecha_emision : date
-        Fecha de emisión del episodio.
+        The release date of the episode.
     titulo_id : int
-        ID del título o serie al que pertenece el episodio.
+        The ID of the title or series to which the episode belongs.
     """
     __tablename__ = 'Episodios'
     id = db.Column(db.Integer, primary_key=True)
@@ -90,22 +122,24 @@ class Episodio(db.Model, Serializable):
 
 class Impresion(db.Model, Serializable):
     """
-    Clase utilizada para representar una impresión (like o dislike) en una reseña.
+    Class used to represent a like or dislike on a review.
+    ---
+    tags:
+      - Impressions
+    summary: Represents a like or dislike on a review
+    description: This class stores the information about a user's like or dislike (impression) on a review. A like is represented by a value of 1, while a dislike is represented by a value of -1.
 
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     id : int
-        ID único de la impresión.
+        The unique identifier of the impression.
     usuario_id : int
-        ID del usuario que realiza la impresión.
+        The ID of the user who made the impression.
     resenia_id : int
-        ID de la reseña a la que se asocia la impresión.
+        The ID of the review to which the impression is associated.
     valor : int
-        Valor de la impresión (1 representa un 'like' y -1 un 'dislike')
+        The value of the impression (1 for 'like', -1 for 'dislike').
     """
-
     __tablename__ = 'Impresiones'
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, nullable=False)
@@ -115,20 +149,23 @@ class Impresion(db.Model, Serializable):
 
 class Entidad(db.Model, UserMixin, Serializable):
     """
-    Clase base abstracta utilizada para definir atributos comunes entre usuarios y productoras.
+    Class used to represent a like or dislike on a review.
+    ---
+    tags:
+      - Impressions
+    summary: Represents a like or dislike on a review
+    description: This class stores the information about a user's like or dislike (impression) on a review. A like is represented by a value of 1, while a dislike is represented by a value of -1.
 
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     id : int
-        ID único de la entidad.
-    nombre_usuario : str
-        Nombre de la entidad.
-    email : str
-        Correo electrónico de la entidad.
-    contraseña : str
-        Contraseña encriptada de la entidad.
+        The unique identifier of the impression.
+    usuario_id : int
+        The ID of the user who made the impression.
+    resenia_id : int
+        The ID of the review to which the impression is associated.
+    valor : int
+        The value of the impression (1 for 'like', -1 for 'dislike').
     """
     __abstract__ = True  
 
@@ -139,67 +176,91 @@ class Entidad(db.Model, UserMixin, Serializable):
 
     def set_password(self, password: str):
         """
-        Encripta y almacena la contraseña del usuario.
+        Encrypts and stores the user's password.
+        ---
+        tags:
+        - User
+        summary: Encrypt and store a user's password securely.
+        description: This method encrypts the provided password using a secure hashing algorithm and stores it in the entity's password field.
 
-        Parámetros
-        ----------
-        password : str
-            Contraseña.
+        parameters:
+        - in: body
+            name: password
+            required: true
+            schema:
+            type: string
+            description: The password to be encrypted and stored.
+            
+        responses:
+        200:
+            description: Password encrypted and stored successfully.
         """
         self.contraseña = generate_password_hash(password)
 
     def check_password(self, password: str):
         """
-        Verifica si la contraseña proporcionada coincide con la almacenada.
+        Verifies if the provided password matches the stored one.
+        ---
+        tags:
+        - User
+        summary: Verify if the provided password matches the stored password.
+        description: This method checks if the given password matches the encrypted password stored in the entity. It is used for authentication purposes.
 
-        Parámetros
-        ----------
-        password : str
-            Contraseña a verificar.
+        parameters:
+        - in: body
+            name: password
+            required: true
+            schema:
+            type: string
+            description: The password to verify against the stored one.
 
-        Retorna
-        -------
-        bool
-            True si la contraseña coincide, False en caso contrario.
+        responses:
+        200:
+            description: Password verification successful. Returns True if the password matches, otherwise False.
         """
         return check_password_hash(self.contraseña, password)
 
 class Productora(Entidad):
     """
-    Clase utilizada para representar una Productora.
+    Class used to represent a Producer.
 
-    Hereda de la clase Entidad.
+    Inherits from the Entidad class.
+
     """
     __tablename__ = 'Productoras'
 
 class Usuario(Entidad):
     """
-    Clase utilizada para representar un Usuario.
+    Class used to represent a User.
 
-    Hereda de la clase Entidad.
+    Inherits from the Entidad class.
+
     """
     __tablename__ = 'Usuarios'
 
 class Reseña(db.Model, Serializable):
     """
-    Modelo que representa una reseña realizada por un usuario.
+    Class used to represent a review made by a user.
+    ---
+    tags:
+    - Reviews
+    summary: Represents a review made by a user on a title (e.g., movie, series, book).
+    description: This class stores the information about a user's review on a title. It includes the user's rating, the content of the review, the user who wrote the review, and the date it was published.
 
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     id : int
-        ID único de la reseña.
+        The unique identifier of the review.
     puntuacion : int
-        Puntuación otorgada en la reseña.
+        The rating given in the review, typically a value between 1 and 5.
     texto : str
-        Contenido de la reseña.
+        The content of the review, where the user shares their opinion on the title.
     usuario_id : int
-        ID del usuario que realizó la reseña.
+        The ID of the user who wrote the review.
     titulo_id : int
-        ID del título reseñado.
+        The ID of the title (e.g., movie, series, book) that is being reviewed.
     fecha_publicacion : date
-        Fecha en que se publicó la reseña.
+        The date when the review was published.
     """
     __tablename__ = 'Reseñas'
     id = db.Column(db.Integer, primary_key=True)
@@ -219,30 +280,28 @@ class EstadoTitulo(Enum):
 
 class Seguimiento(db.Model, Serializable):
     """
-    Modelo que representa el seguimiento de un usuario a un título.
+    Class used to represent a user's progress tracking of a title.
+    ---
+    tags:
+    - Tracking
+    summary: Represents the progress of a user following a title (e.g., a movie, series, or book).
+    description: This class stores information about a user's progress while following a title, including the status of the tracking, the number of episodes or chapters watched, and the associated review.
 
-    Almacena información sobre el progreso de un usuario en relación con
-    un título que está siguiendo, incluyendo el estado del seguimiento, la cantidad
-    de episodios o capítulos vistos, y la reseña asociada.
-
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     id : int
-        ID único del seguimiento.
+        The unique identifier of the progress tracking.
     usuario_id : int
-        ID del usuario que está siguiendo el título.
+        The ID of the user who is following the title.
     estado : int
-        Estado del seguimiento.
+        The current status of the tracking (e.g., ongoing, completed, etc.).
     resenia_id : int
-        ID de la reseña asociada al seguimiento.
+        The ID of the review associated with the progress tracking.
     cantidad_visto : int
-        Cantidad de episodios vistos hasta el momento.
+        The number of episodes or chapters the user has watched so far.
     titulo_id : int
-        ID del título que el usuario está siguiendo.
+        The ID of the title (e.g., movie, series, book) that the user is tracking.
     """
-
     __tablename__ = 'Seguimientos'
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, nullable=False)
@@ -260,24 +319,27 @@ class TipoTitulo(Enum):
 
 class Titulo(db.Model, Serializable):
     """
-    Modelo que representa un título en la base de datos.
+    Class used to represent a title in the database.
+    ---
+    tags:
+    - Titles
+    summary: Represents a title (movie or series) in the database.
+    description: This class stores information about a title, including its unique ID, associated producer, start and end dates, title name, and type (whether it is a series or a movie).
 
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     id : int
-        ID único del título.
+        The unique identifier of the title.
     productora_id : int
-        ID de la productora asociada al título.
+        The ID of the producer associated with the title.
     fecha_inicio : date
-        Fecha en la que comenzó la emisión del título.
+        The start date of the title's airing or release.
     fecha_fin : date
-        Fecha en la que finalizó la emisión del título.
+        The end date of the title's airing or release.
     titulo : str
-        El nombre del título.
+        The name of the title (e.g., the name of the movie or series).
     tipo : bool
-        Tipo de título: 1 si es una serie, 0 si es una película.
+        The type of title: 1 if it is a series, 0 if it is a movie.
     """
     __tablename__ = 'Titulos'
     id = db.Column(db.Integer, primary_key=True)
@@ -289,18 +351,20 @@ class Titulo(db.Model, Serializable):
     
 class Relacion(db.Model, Serializable):
     """
-    Modelo que representa la relación de seguimiento entre dos usuarios.
+    Class used to represent the following relationship between two users.
+    ---
+    tags:
+    - Relationships
+    summary: Represents the following relationship between two users.
+    description: This class stores information about a user following another user, including the follower's and the followed user's IDs.
 
-    ...
-
-    Atributos
-    ----------
+    Attributes:
+    -----------
     seguidor : int
-        ID del usuario que sigue a otro usuario.
+        The ID of the user who follows another user.
     seguido : int
-        ID del usuario que es seguido por otro usuario.
+        The ID of the user being followed by another user.
     """
-
     __tablename__ = 'Relaciones'
     seguidor = db.Column(db.Integer, primary_key=True)
     seguido = db.Column(db.Integer, primary_key=True)
