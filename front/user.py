@@ -2,6 +2,7 @@ from flask import request, make_response, redirect, url_for, session, Blueprint,
 from flask_restful import Resource, Api
 from flask.templating import render_template
 
+from resources.usuario import UserAPI
 from auth import token_required
 
 usuario_bp = Blueprint('usuario', __name__)
@@ -9,24 +10,22 @@ usuario_api = Api(usuario_bp)
 
 class Login(Resource):
     def post(self):
-        data = request.form
-        email = str(data.get('email'))
-        password = str(data.get('password'))
+        data = request.get_json()
+        res = UserAPI()
 
-        parsed_data = {
-            'email': email,
-            'password': password
-        }
+        with current_app.test_request_context(
+            '/api/user/', json=data, method='GET'
+        ) as client:
+            response = res.get()
+            token = session['auth_token']
 
-        with current_app.test_client() as client:
-            response = client.get('/api/user/', json=parsed_data)
+        session['auth_token'] = token
 
-            if response.status_code == 200:
-                print('success')
-                return redirect(url_for('usuario.home'))
-            
-            else:
-                return request.data
+        if response[1] == 200:
+            return redirect(url_for('usuario.home'))
+        
+        else:
+            return response
 
     def get(self):
         response = make_response(render_template('login.html'))
@@ -35,25 +34,23 @@ class Login(Resource):
     
 class Signup(Resource):
     def post(self):
-        data = request.form
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
+        data = request.get_json()
+        res = UserAPI()
 
-        parsed_data = {
-            'username': username,
-            'email': email,
-            'password': password
-        }
+        with current_app.test_request_context(
+            '/api/user/', json=data, method='POST'
+        ) as client:
+            response = res.post()
+            token = session['auth_token']
 
-        with current_app.test_client() as client:
-            response = client.post('/api/user', json=parsed_data)
+        session['auth_token'] = token
 
-            if response.status_code == 200:
-                return redirect(url_for('usuario.home'))
-            
-            else:
-                return request.data
+        if response[1] == 200:
+            return redirect(url_for('usuario.home'))
+        
+        else:
+            return response
+
 
     def get(self):
         response = make_response(render_template('signup.html'))

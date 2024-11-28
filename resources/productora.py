@@ -43,11 +43,14 @@ class ProducerAPI(Resource):
             description: Server error.
         """
         data = request.get_json()
+        if not 'email' in data or not 'password' in data:
+          return {'error': 'Falta data'}, 400
+        
         email = data['email']
         password = data['password']
 
         if not email or not password:
-            return {'error': 'Falta data'}, 400
+          return {'error': 'Falta data'}, 400
 
         login_info = Productora.query.filter_by(email=email).first()
 
@@ -92,6 +95,9 @@ class ProducerAPI(Resource):
             description: Server error.
         """
         data = request.get_json()
+        if 'username' not in data or not 'email' in data or not 'password' in data:
+            return {'error': 'Falta data'}, 400
+        
         email = data['email']
         password = data['password']
         username = data['username']
@@ -110,6 +116,9 @@ class ProducerAPI(Resource):
 
         db.session.add(new_login)
         db.session.commit()
+
+        token = generate_token(new_login.nombre_usuario, 'producer')
+        session['auth_token'] = token
 
         return {'message': 'Usuario registrado'}, 200
     

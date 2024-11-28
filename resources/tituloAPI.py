@@ -108,7 +108,7 @@ class TituloAPI(Resource):
         if nuevo_titulo.tipo == TipoTitulo.PELICULA:
             create_epsidode(
                 nuevo_titulo.titulo,
-                data['duracion'],
+                data['duracion'] if 'duracion' in data else 0,
                 orden=1,
                 fecha_emision=fecha_inicio,
                 titulo_id=nuevo_titulo.id
