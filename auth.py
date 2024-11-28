@@ -38,7 +38,7 @@ def generate_token(username, user_type: Literal['user', 'producer']):
 
 # Decorador para proteger rutas
 def token_required(user_type: Literal['user', 'producer']):
-"""
+    """
     Decorador para proteger las rutas que requieren autenticación con token JWT.
 
     Este decorador asegura que la ruta esté protegida, verificando que el token JWT esté presente

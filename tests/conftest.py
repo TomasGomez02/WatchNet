@@ -97,6 +97,10 @@ class TitleActions:
     
     def delete(self, titulo_id):
         return self._client.delete(f'/api/titulo/{titulo_id}')
+    
+    def create_review(self, titulo_id, data):
+        return self._client.post(f'/api/titulo/{titulo_id}/review',
+                                 json=data)
 
 @pytest.fixture()
 def auth(client):

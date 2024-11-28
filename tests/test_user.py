@@ -85,3 +85,80 @@ def test_user_profile(client, auth):
     response = client.get('/user/')
     assert response.status_code == 200
 
+def test_follow(client, auth):
+    auth.init()
+    auth.init('test2', 'test2', 'test2')
+
+    response = client.post('/user/follow', json={
+                               'seguido_id': 1
+                           })
+    assert response.status_code == 200
+
+def test_follow_self(client, auth):
+    auth.init()
+
+    response = client.post('/user/follow', json={
+                               'seguido_id': 1
+                           })
+    assert response.status_code == 403
+
+def test_follow_inexistent(client, auth):
+    auth.init()
+
+    response = client.post('/user/follow', json={
+                               'seguido_id': 2
+                           })
+    assert response.status_code == 404
+
+def test_follow_already(client, auth):
+    auth.init()
+    auth.init('test2', 'test2', 'test2')
+
+    client.post('/user/follow', json={
+                               'seguido_id': 2
+                           })
+
+    response = client.post('/user/follow', json={
+                               'seguido_id': 2
+                           })
+    assert response.status_code == 403
+
+def test_follow_get_following(client, auth):
+    auth.init()
+    auth.init('test2', 'test2', 'test2')
+    auth.init('test3', 'test3', 'test3')
+
+    client.post('/user/follow', json={
+                               'seguido_id': 1
+                           })
+    client.post('/user/follow', json={
+                               'seguido_id': 2
+                           })
+
+    response = client.get('/user/follow', json={})
+    data = response.get_json()
+    assert response.status_code == 200
+    assert 'seguidos' in data
+    assert len(data['seguidos']) == 2
+    
+def test_follow_get_followers(client, auth):
+    auth.init()
+    auth.init('test2', 'test2', 'test2')
+    client.post('/user/follow', json={
+                               'seguido_id': 1
+                           })
+    
+    auth.init('test3', 'test3', 'test3')
+    client.post('/user/follow', json={
+                               'seguido_id': 1
+                           })
+    
+    auth.login()
+
+    response = client.get('/user/follow', json={
+        'type': 'follower'
+    })
+    data = response.get_json()
+    assert response.status_code == 200
+    assert 'seguidores' in data
+    assert len(data['seguidores']) == 2

@@ -139,278 +139,13 @@ class UserProfile(Resource):
         response.headers["Content-Type"] = "text/html"
         return response
     
-class CrearResenia(Resource):
-    """
-    Clase que maneja la creación de reseñas para un título específico.
-
-    """
-    @token_required
-    def post(self, current_user, titulo_id):
-        """
-        Método para crear una nueva reseña para un título específico.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        titulo_id : int
-            El ID del título para el que se desea crear la reseña.
-
-        Returns
-        --------
-        dict
-            Un diccionario con un mensaje de error y código de estado 404 si no se encuentra al usuario 
-            o al título. Si la reseña se crea con éxito, se devuelve un mensaje de éxito con el código 200.
-        """
-        data = request.get_json()
-
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario:
-            return {'message': 'Usuario no encontrado en la base de datos'}, 404
-
-        titulo = Titulo.query.filter_by(id=titulo_id).first()
-        if not titulo:
-            return {'message': f'Contenido no encontrado'}, 404
-
-        puntuacion = data['puntuacion']
-        texto = data['texto']
-     
-        resenia = Resenia(
-            usuario_id=usuario.id, 
-            puntuacion=puntuacion,
-            texto=texto,
-            titulo_id=titulo.id, 
-            fecha_publicacion= datetime.now(timezone.utc)
-        )
-        db.session.add(resenia)
-        db.session.commit()
-
-        return {'message': 'Reseña añadida con éxito'}, 200
-    
-class EliminarResenia(Resource):
-    """
-    Clase que maneja la eliminación de una reseña.
-
-    """
-    @token_required
-    def delete(self, current_user, resenia_id):
-        """
-        Método para eliminar una reseña específica.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        resenia_id : int
-            El ID de la reseña que se desea eliminar.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de error y código de estado 404 si no se encuentra la reseña. 
-            Si el usuario no tiene permiso para eliminarla, se devuelve un mensaje de error con código 403.
-            Si la reseña se elimina con éxito, se devuelve un mensaje de éxito con código 200.
-        """
-        resenia = Resenia.query.filter_by(id=resenia_id).first()
-
-        if not resenia:
-            return {'message': 'Reseña no encontrada'}, 404
-
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario or resenia.usuario_id != usuario.id:
-            return {'message': 'No tienes permiso para eliminar esta reseña'}, 403
-
-        db.session.delete(resenia)
-        db.session.commit()
-
-        return {'message': 'Reseña eliminada con éxito'}, 200
-
-class Comentar(Resource):
-    """
-    Clase que maneja la creación de comentarios sobre una reseña.
-    """
-    @token_required(user_type='user')
-    def post(self, current_user, resenia_id):
-        """
-        Método para agregar un comentario a una reseña.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        resenia_id : int
-            El ID de la reseña sobre la que se quiere comentar.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de error y código de estado 400 si el texto del comentario está vacío. 
-            Si la reseña o el usuario no se encuentran, se devuelve un mensaje de error con código 404.
-            Si el comentario se agrega con éxito, se devuelve un mensaje de éxito con código 200.
-        """
-        data = request.get_json()
-
-        texto = data['texto']
-        if not texto:
-            return {'message': 'El texto del comentario es obligatorio'}, 400
-
-        resenia = Reseña.query.filter_by(id=resenia_id).first()
-        if not resenia:
-            return {'message': 'Reseña no encontrada'}, 404
-
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario:
-            return {'message': 'Usuario no encontrado en la base de datos'}, 404
-
-        comentario = Comentario(
-                        texto=texto,
-                        usuario_id=usuario.id,
-                        resenia_id=resenia.id, 
-                        fecha_publicacion=datetime.now(timezone.utc)
-                    )
-
-        db.session.add(comentario)
-        db.session.commit()
-
-        return {'message': 'Comentario agregado con éxito'}, 200
-class EliminarComentario(Resource):
-    """
-    Clase que maneja la eliminación de un comentario.
-
-    """
-    @token_required(user_type='user')
-    def delete(self, current_user, comentario_id):
-        """
-        Método para eliminar una comentario.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        comentario_id : int
-            El ID del comentario que se desea eliminar.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de error y código de estado 404 si no se encuentra la reseña. 
-            Si el usuario no tiene permiso para eliminarla, se devuelve un mensaje de error con código 403.
-            Si la reseña se elimina con éxito, se devuelve un mensaje de éxito con código 200.
-        """
-        comentario = Comentario.query.filter_by(id=comentario_id).first()
-
-        if not comentario:
-            return {'message': 'Comentario no encontrado'}, 404
-
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario or comentario.usuario_id != usuario.id:
-            return {'message': 'No es posible eliminar este comentario'}, 403
-
-        db.session.delete(comentario)
-        db.session.commit()
-
-        return {'message': 'Comentario eliminado con éxito'}, 200
-
-class PuntuarResenia(Resource):
-    """
-    Clase que maneja la acción de puntuar una reseña.
-
-    """
-    def post(self, current_user, resenia_id):
-        """
-        Método para puntuar una reseña.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        resenia_id : int
-            El ID de la reseña que se desea puntuar.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de error y código de estado 400 si el valor de la puntuación es inválido 
-            o si el usuario ya ha puntuado la reseña. Si la reseña o el usuario no se encuentran, se devuelve un 
-            mensaje de error con código 404. Si la puntuación se agrega con éxito, se devuelve un mensaje de éxito 
-            con código 200.
-        """
-        data = request.get_json()
-        valor = data['valor']
-
-        if valor not in [1, -1]:
-            return {'message': 'El valor debe ser 1 (like) o -1 (dislike).'}, 400
-
-        resenia = Reseña.query.filter_by(id=resenia_id).first()
-        if not resenia:
-            return {'message': 'Reseña no encontrada'}, 404
-
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario:
-            return {'message': 'Usuario no encontrado en la base de datos'}, 404
-        
-        impresion_existente = Impresion.query.filter_by(usuario_id=usuario.id, resenia_id=resenia.id).first()
-        if impresion_existente:
-            return {'message': 'Ya has puntuado esta reseña anteriormente.'}, 400
-
-        impresion = Impresion(
-            usuario_id=usuario.id,
-            resenia_id=resenia.id,
-            valor=valor)
-
-        db.session.add(impresion)
-        db.session.commit()
-
-        return {'message': f'Has dado un {"like" if valor == 1 else "dislike"} a la reseña.'}, 200
-    
-class EliminarPuntaje(Resource):
-    """
-    Clase que maneja la acción de eliminar un puntaje de una reseña.
-
-    """
-    @token_required(user_type='user')
-    def delete(self, current_user, resenia_id):
-        """
-        Método para eliminar un puntaje previamente dado a una reseña.
-
-        Parámetros
-        -----------
-        current_user : str
-            El nombre de usuario del usuario autenticado, obtenido del token.
-        resenia_id : int
-            El ID de la reseña de la cual se desea eliminar el puntaje.
-
-        Retorna
-        --------
-        dict
-            Un diccionario con un mensaje de error y código de estado 404 si el usuario o la reseña no se encuentran, 
-            o si el usuario no ha puntuado la reseña. Si la puntuación se elimina con éxito, se devuelve un mensaje 
-            de éxito con código de estado 200.
-        """
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
-        if not usuario:
-            return {'message': 'Usuario no encontrado en la base de datos'}, 404
-
-        resenia = Reseña.query.filter_by(id=resenia_id).first()
-        if not resenia:
-            return {'message': 'Reseña no encontrada'}, 404
-
-        impresion = Impresion.query.filter_by(usuario_id=usuario.id, resenia_id=resenia.id).first()
-        if not impresion:
-            return {'message': 'No has puntuado esta reseña.'}, 404
-
-        db.session.delete(impresion)
-        db.session.commit()
-
-        return {'message': 'Puntuación eliminada con éxito.'}, 200
-    
-class SeguirUsuario(Resource):
+class SeguirAPI(Resource):
     """
     Clase que maneja la acción de seguir a otro usuario.
 
     """
     @token_required(user_type='user')
-    def post(self, current_user, seguido_id):
+    def post(self, current_user):
         """
         Método para seguir a un usuario.
 
@@ -427,6 +162,8 @@ class SeguirUsuario(Resource):
             Un diccionario con un mensaje de éxito y código de estado 201 si el seguimiento fue exitoso.
             En caso de error, devuelve un mensaje con código de estado 400 o 404 según corresponda.
         """
+        data = request.get_json()
+        seguido_id = data['seguido_id']
         seguidor = Usuario.query.filter_by(nombre_usuario=current_user).first()
         seguido = Usuario.query.filter_by(id=seguido_id).first()
         if not seguido:
@@ -434,27 +171,36 @@ class SeguirUsuario(Resource):
         
         #Verifico que no se siga a si mismo
         if seguidor.id == seguido.id:
-            return {'message': 'Operación no válida'}, 400
+            return {'message': 'Operación no válida'}, 403
 
         #Verifico si ya se siguen
         relacion_existente = Relacion.query.filter_by(seguidor=seguidor.id, seguido=seguido.id).first()
         if relacion_existente:
-            return {'message': 'Ya sigues a este usuario'}, 400
+            return {'message': 'Ya sigues a este usuario'}, 403
 
         nueva_relacion = Relacion(seguidor=seguidor.id, seguido=seguido.id)
 
         db.session.add(nueva_relacion)
         db.session.commit()
 
-        return {'message': 'Ahora sigues a este usuario con éxito'}, 201
+        return {'message': 'Ahora sigues a este usuario con éxito'}, 200
     
-class DejarDeSeguir(Resource):
-    """
-    Clase que maneja la acción de dejar de seguir a otro usuario.
-
-    """
     @token_required(user_type='user')
-    def post(self, current_user, seguido_id):
+    def get(self, current_user):    
+        user = Usuario.query.filter_by(nombre_usuario=current_user).first()
+        if not user:
+            return {'error': 'Usuario actual no existe'}, 404
+        
+        data = request.get_json()
+        if 'type' in data and data['type'] == 'follower':
+            seguidores = Relacion.query.filter_by(seguido=user.id)
+            return {'seguidores': [seguidor.seguidor for seguidor in seguidores]}, 200
+        seguidos = Relacion.query.filter_by(seguidor=user.id)
+        return {'seguidos': [seguido.seguido for seguido in seguidos]}, 200
+        
+    
+    @token_required(user_type='user')
+    def delete(self, current_user, seguido_id):
         """
         Método para dejar de seguir a un usuario.
 
@@ -491,7 +237,6 @@ class DejarDeSeguir(Resource):
 class SeguirTitulo(Resource):
     """
     Clase que maneja la accion de seguir un titulo.
-
     """
     @token_required(user_type='user')
     def post(self, current_user, titulo_id):
@@ -535,11 +280,6 @@ class SeguirTitulo(Resource):
 
         return {'message': 'Título seguido con éxito'}, 200
     
-class ActualizarSeguimiento(Resource):
-    """
-    Clase que maneja la accion de actualizar el seguimiento de un titulo.
-
-    """
     @token_required(user_type='user')
     def put(self, current_user, titulo_id):
         """
@@ -625,7 +365,7 @@ class PerfilUsuario(Resource):
         --------
         dict: Reseñas del usuario.
         """
-        resenias = Resenia.query.filter_by(usuario_id=usuario_id).all()
+        resenias = Reseña.query.filter_by(usuario_id=usuario_id).all()
         resenias_data = [{'id': r.id, 'puntuacion': r.puntuacion, 'texto': r.texto, 'fecha': r.fecha_publicacion.isoformat()} for r in resenias]
         return {'reseñas': resenias_data}
 
@@ -683,17 +423,10 @@ class PerfilUsuario(Resource):
             'series_vistas': series['series_vistas']
         }, 200
 
-
-
-
 usuario_api.add_resource(Login, '/login')
 usuario_api.add_resource(SignUp, '/signup')
 usuario_api.add_resource(UserProfile, '/')
-#usuario_api.add_resource(Comentar, '/<str:current_user>/<int:resenia_id>/agregarComentario')
-#usuario_api.add_resource(EliminarComentario, '/<str:current_user>/comentarios/<comentario_id>')
-#usuario_api.add_resource(PuntuarResenia, '/<str:current_user>/resenias/<resenia_id>/puntuar')
-#usuario_api.add_resource(EliminarResenia, '/<str:current_user>/resenias/<resenia_id>/eliminarPuntaje')
-#usuario_api.add_resource(SeguirUsuario, '/<str:current_user>/<str:seguido_id>')   #No se si estan bien pero algo asi serian
-#usuario_api.add_resource(DejarDeSeguir, '/<str:current_user>/<str:seguido_id>')
+usuario_api.add_resource(SeguirAPI, '/follow',
+                         '/follow/<int:seguido_id>')
 #usuario_api.add_resource(SeguirTitulo, '/<str:current_user>/<int:titulo_id>')
 #usuario_api.add_resource(ActualizarSeguimiento, '/<str:current_user>/<int:titulo_id>')
