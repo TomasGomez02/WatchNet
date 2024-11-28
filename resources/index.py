@@ -5,4 +5,6 @@ from flask.templating import render_template
 
 class Index(Resource):
     def get(self):
-        return redirect(url_for('usuario.login'))
+        response = make_response(render_template('index.html'))
+        response.headers["Content-Type"] = "text/html"
+        return response

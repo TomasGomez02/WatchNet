@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request, make_response, redirect, url_for, session
 from flask_restful import Api, Resource
-from models.models import Comentario, Impresion, Titulo, Usuario, Reseña, db, Productora, TipoTitulo, Episodio
+from models.models import Comentario, Impresion, Titulo, Usuario, Reseña, DataBase, Productora, TipoTitulo, Episodio
 from auth import token_required
 
 titulo_bp = Blueprint('titulo', __name__)
 titulo_api = Api(titulo_bp)
+
+db = DataBase().db
 
 def create_epsidode(titulo: str, duracion: int, orden: int, fecha_emision: datetime.date, titulo_id: int):
     new_episode = Episodio(titulo=titulo,

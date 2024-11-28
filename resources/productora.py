@@ -1,17 +1,19 @@
 from flask import Blueprint, request, make_response, redirect, url_for, session
 from flask_restful import Api, Resource
 from flask.templating import render_template
-from models.models import Titulo, db, Productora
+from models.models import Titulo, DataBase, Productora
 from auth import generate_token, token_required
 
-productora_bp = Blueprint('productora', __name__)
-productora_api = Api(productora_bp)
+productoraAPI_bp = Blueprint('productora', __name__)
+productora_api = Api(productoraAPI_bp)
 
-class Login(Resource):
+db = DataBase().db
+
+class ProducerAPI(Resource):
     """
     Handles login operations for producers.
     """
-    def post(self):
+    def get(self):
         """
         Log in a producer.
         ---
@@ -40,9 +42,9 @@ class Login(Resource):
           500:
             description: Server error.
         """
-        data = request.form
-        email = data.get('email')
-        password = data.get('password')
+        data = request.get_json()
+        email = data['email']
+        password = data['password']
 
         if not email or not password:
             return {'error': 'Falta data'}, 400
@@ -55,51 +57,8 @@ class Login(Resource):
         token = generate_token(login_info.nombre_usuario, 'producer')
         session['auth_token'] = token
 
-        return redirect(url_for('productora.productoraprofile', current_user=login_info.nombre_usuario))
+        return {'message': 'Producer authorized'}, 200
     
-    def get(self):
-        """
-        Display the login page.
-        ---
-        tags:
-          - Producers
-        summary: Display the login page
-        description: Returns the HTML template for the producer login page.
-        responses:
-          200:
-            description: HTML content of the login page.
-            content:
-              text/html:
-                schema:
-                  type: string
-          500:
-            description: Server error.
-        """
-        response = make_response(render_template('login_prod.html'))
-        response.headers["Content-Type"] = "text/html"
-        return response
-    
-    def delete(self):
-        """
-        Log out a producer.
-        ---
-        tags:
-          - Producers
-        summary: Log out a producer
-        description: Logs out the producer and clears their session token.
-        responses:
-          302:
-            description: Redirect to the home page after logout.
-          500:
-            description: Server error.
-        """
-        session.pop('auth_token', None)
-        return redirect(url_for('index'))
-    
-class SignUp(Resource):
-    """
-    Handles registration of a new producer.
-    """
     def post(self):
         """
         Register a new producer.
@@ -132,10 +91,10 @@ class SignUp(Resource):
           500:
             description: Server error.
         """
-        data = request.form
-        email = data.get('email')
-        password = data.get('password')
-        username = data.get('username')
+        data = request.get_json()
+        email = data['email']
+        password = data['password']
+        username = data['username']
 
         if not username or not email or not password:
             return {'error': 'Falta data'}, 400
@@ -154,27 +113,22 @@ class SignUp(Resource):
 
         return {'message': 'Usuario registrado'}, 200
     
-    def get(self):
+    def delete(self):
         """
-        Display the signup page.
+        Log out a producer.
         ---
         tags:
           - Producers
-        summary: Display the signup page
-        description: Returns the HTML template for the producer signup page.
+        summary: Log out a producer
+        description: Logs out the producer and clears their session token.
         responses:
-          200:
-            description: HTML content of the signup page.
-            content:
-              text/html:
-                schema:
-                  type: string
+          302:
+            description: Redirect to the home page after logout.
           500:
             description: Server error.
         """
-        response = make_response(render_template('signup_prod.html'))
-        response.headers["Content-Type"] = "text/html"
-        return response
+        session.pop('auth_token', None)
+        return redirect(url_for('index'))
     
 class ProductoraProfile(Resource):
     """
@@ -228,6 +182,5 @@ class ProductoraProfile(Resource):
         """
         return {'message': 'hi'}, 201
     
-productora_api.add_resource(Login, '/login')
-productora_api.add_resource(SignUp, '/signup')
-productora_api.add_resource(ProductoraProfile, '/')
+productora_api.add_resource(ProducerAPI, '/')
+#productora_api.add_resource(ProductoraProfile, '/')

@@ -5,7 +5,21 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-db = SQLAlchemy()
+class DataBase:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(DataBase, cls).__new__(cls, *args, **kwargs)
+            cls._instance._db = SQLAlchemy()
+        return cls._instance
+
+    @property
+    def db(self):
+        return self._instance._db
+
+database = DataBase()
+db = database.db
 
 class Serializable:
     def serialize(self):
@@ -14,7 +28,7 @@ class Serializable:
             value = getattr(self, column.name)
             if type(value) == date:
                 value = value.isoformat()
-            elif type(value) == TipoTitulo:
+            elif type(value) == TipoTitulo or type(value) == EstadoTitulo:
                 value = value.value
             data[column.name] = value
         return data
@@ -195,6 +209,14 @@ class Reseña(db.Model, Serializable):
     titulo_id = db.Column(db.Integer, nullable=False)
     fecha_publicacion = db.Column(db.Date, nullable=False)
 
+class EstadoTitulo(Enum):
+    COMPLETO = 'COMPLETO'
+    ACTIVO = 'ACTIVO'
+    SIN_COMENZAR = 'SIN_COMENZAR'
+
+    def __str__(self):
+        return self.value
+
 class Seguimiento(db.Model, Serializable):
     """
     Modelo que representa el seguimiento de un usuario a un título.
@@ -224,8 +246,8 @@ class Seguimiento(db.Model, Serializable):
     __tablename__ = 'Seguimientos'
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, nullable=False)
-    estado = db.Column(db.Integer, nullable=False)
-    resenia_id = db.Column(db.Integer, nullable=False)
+    estado = db.Column(db.Enum(EstadoTitulo), nullable=False)
+    resenia_id = db.Column(db.Integer, nullable=True)
     cantidad_visto = db.Column(db.Integer, nullable=False)
     titulo_id = db.Column(db.Integer, nullable=False)
 
