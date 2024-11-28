@@ -11,26 +11,39 @@ except ModuleNotFoundError:
 
 def generate_token(username, user_type: Literal['user', 'producer']):
     """
-    Genera un token JWT para un usuario dado.
-
-    El token tiene un tiempo de expiración de 15 minutos desde el momento en que se genera. 
-    Se utiliza el algoritmo HS256 para firmar el token, y el token contiene el nombre de usuario
-    y la fecha de expiración.
-
-    Parámetros
-    ----------
-    username : str
-        El nombre de usuario para el cual se genera el token.
-
-    Retorna
-    -------
-    str
-        Un token JWT que incluye el nombre de usuario y la fecha de expiración.
-    
-    Excepciones
-    ------
-    Exception
-        Si ocurre un error durante la creación del token, se lanzará una excepción.
+    Generate a JWT token for a given user.
+    ---
+    tags:
+      - Authentication
+    summary: Generate JWT token
+    description: Creates a JSON Web Token (JWT) for a user, signed using the HS256 algorithm, with an expiration time of 15 minutes. The token contains the username, user type, and expiration date.
+    parameters:
+      - in: query
+        name: username
+        required: true
+        schema:
+          type: string
+        description: The username for which the token is being generated.
+      - in: query
+        name: user_type
+        required: true
+        schema:
+          type: string
+          enum: [user, producer]
+        description: The type of user (either 'user' or 'producer').
+    responses:
+      200:
+        description: JWT token generated successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The generated JWT token.
+      500:
+        description: An error occurred during token generation.
     """
     expiration = datetime.now(timezone.utc) + timedelta(minutes=15) 
     token = jwt.encode({
@@ -43,27 +56,26 @@ def generate_token(username, user_type: Literal['user', 'producer']):
 # Decorador para proteger rutas
 def token_required(user_type: Literal['user', 'producer']):
     """
-    Decorador para proteger las rutas que requieren autenticación con token JWT.
-
-    Este decorador asegura que la ruta esté protegida, verificando que el token JWT esté presente
-    en la sesión y que sea válido. Si el token no está presente, ha expirado o es inválido, 
-    se devuelve un error correspondiente. Si el token es válido, se ejecuta la función original
-    pasando el nombre de usuario del token como argumento.
-
-    Parámetros
-    ----------
-    f : function
-        La función de vista o ruta a la que se aplicará el decorador.
-
-    Retorna
-    -------
-    function
-        La función decorada que realiza la validación del token antes de ejecutar la función original.
-    
-    Excepciones
-    ------
-    UnauthorizedError
-        Si el token está ausente o es inválido, se retorna un mensaje de error con el código 401 o 403.
+    Decorator to protect routes requiring JWT authentication with role validation.
+    ---
+    tags:
+      - Authentication
+    summary: Protect route with JWT authentication and user role validation
+    description: Ensures that the route is protected by checking that a valid JWT token is present in the session. The token is verified for the correct user type (either 'user' or 'producer'). If the token is missing, expired, invalid, or the role does not match, an appropriate error is returned. If the token is valid and the role is correct, the original function is executed, passing the username from the token as an argument.
+    parameters:
+      - in: header
+        name: Authorization
+        required: true
+        schema:
+          type: string
+        description: Bearer token required for authentication.
+    responses:
+      401:
+        description: Token is missing or the user role is incorrect.
+      403:
+        description: Token has expired or is invalid.
+      200:
+        description: The original function is executed after successful token validation and user role check.
     """
     def decorator(func):
         def decorated(*args, **kwargs):
