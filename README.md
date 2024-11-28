@@ -33,3 +33,49 @@ Algunas de las estrategias pensadas para generar ingresos con WatchNet:
 
 ### Diagrama de Clases
 [Haz click aquí para ver el diagrama de clases.](https://drive.google.com/file/d/1iH6wuY-s6IVWiUWIAT1q8GHiB0jkwWfv/view?usp=sharing)
+
+# Instalación
+
+## Python
+Descargar Python 3.8 o superior. 
+### Windows
+Se puede descargar Python desde [aquí](https://www.python.org/downloads/).
+### Linux
+Utiliza el comando correspondiente a tu distribución para instalar programas. Por ejemplo, para distribuciones basadas en Debian, usa:
+```bash
+sudo apt install python3
+```
+
+## Poetry
+Descargar e instalar Poetry con el siguiente comando:
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+Una vez instalado, se puede verificar la instalación con:
+```bash
+poetry --version
+```
+En caso de no funcionar, quizá necesite añadir Poetry al PATH. Lo puede hacer con:
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+## Clonar repositorio
+Clona el repositorio desde tu terminal con:
+```bash
+git clone https://github.com/TomasGomez02/WatchNet.git
+```
+
+## Instalar dependencias
+Con la terminan en la carpeta raiz del proyecto, usa
+```bash
+poetry install
+```
+para instalar todas las dependencias del proyecto.
+
+## Correr app
+Utilizar el comando
+```bash
+py run.py
+```
+desde el directorio raiz de la app para comenzar a correrla. 
