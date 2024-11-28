@@ -112,7 +112,7 @@
                     const result = await response.json();
                     errorMessage.textContent = result.error || 'An unexpected error occurred.';
                 } else {
-                    window.location.href = '/dashboard'; // Redirect to dashboard on success
+                    window.location.href = '/user/home'; // Redirect to dashboard on success
                 }
             } catch (error) {
                 errorMessage.textContent = 'An error occurred. Please try again.';

@@ -5,12 +5,12 @@ from flask import session
 from models.models import EstadoTitulo
 
 def test_user_signup(client, auth):
-    response = client.get('/api/user/signup')
-    assert response.status_code == 200
+    response = client.post('/api/user/', json={})
+    assert response.status_code == 400
 
     response = client.post(
-        '/api/user/signup',
-        data={'email': 'test', 'username': 'test', 'password': 'test'}
+        '/api/user/',
+        json={'email': 'test', 'username': 'test', 'password': 'test'}
     )
     assert response.status_code == 200
 
@@ -21,44 +21,41 @@ def test_user_signup(client, auth):
 ))
 def test_register_validate_input(client, email, username, password, message):
     response = client.post(
-        '/api/user/signup',
-        data={'email': email, 'username': username, 'password': password}
+        '/api/user/',
+        json={'email': email, 'username': username, 'password': password}
     )
     assert message in response.data
 
 def test_register_validate_existing(client):
     client.post(
-        '/api/user/signup',
-        data={'email': 'test', 'username': 'test', 'password': 'test'}
+        '/api/user/',
+        json={'email': 'test', 'username': 'test', 'password': 'test'}
     )
 
     response = client.post(
-        '/api/user/signup',
-        data={'email': 'test', 'username': 'test', 'password': 'test'}
+        '/api/user/',
+        json={'email': 'test', 'username': 'test', 'password': 'test'}
     )
     assert b'Email ya esta registrado' in response.data
 
     response = client.post(
-        '/api/user/signup',
-        data={'email': 'a', 'username': 'test', 'password': 'test'}
+        '/api/user/',
+        json={'email': 'a', 'username': 'test', 'password': 'test'}
     )
     assert b'Username ya existe' in response.data
 
 def test_login(client, auth):
     auth.signup()
 
-    response = client.get('/api/user/login')
-    assert response.status_code == 200
+    response = client.get('/api/user/', json={})
+    assert response.status_code == 400
 
     with client:
         response = client.post(
-            '/api/user/login',
-            data={'email': 'test', 'password': 'test'},
-            follow_redirects=True
+            '/api/user/',
+            json={'email': 'test', 'password': 'test'}
         )
         assert session['auth_token'] is not None
-    assert len(response.history) == 1
-    assert response.request.path == '/api/user/'
 
 @pytest.mark.parametrize(('email', 'password', 'message'), (
         ('', '', b'Falta data'),
@@ -69,10 +66,11 @@ def test_login(client, auth):
 ))
 def test_login_validate(client, auth, email, password, message):
     auth.signup()
+    auth.logout()
     with client:
         response = auth.login(email, password)
         assert message in response.data
-        assert not 'auth_token' in session
+        assert 'auth_token' not in session
 
 def test_logout(client, auth):
     auth.signup()
@@ -81,12 +79,6 @@ def test_logout(client, auth):
         auth.login()
         auth.logout()
         assert 'auth_token' not in session
-
-def test_user_profile(client, auth):
-    auth.signup()
-    auth.login()
-    response = client.get('/api/user/')
-    assert response.status_code == 200
 
 def test_follow(client, auth):
     auth.init()

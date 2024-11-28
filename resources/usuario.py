@@ -1,6 +1,5 @@
 from flask import request, make_response, redirect, url_for, session, Blueprint
 from flask_restful import Resource, Api
-from flask.templating import render_template
 from models.models import  Episodio, EstadoTitulo, Relacion, Reseña, Seguimiento, Titulo, DataBase, Usuario
 from auth import generate_token, token_required
 
@@ -44,6 +43,10 @@ class UserAPI(Resource):
             description: Missing or already registered data.
         """
         data = request.get_json()
+
+        if 'username' not in data or not 'email' in data or not 'password' in data:
+            return {'error': 'Falta data'}, 400
+        
         email = data['email']
         password = data['password']
         username = data['username']
@@ -96,16 +99,19 @@ class UserAPI(Resource):
             description: Missing or incorrect credentials.
         """
         data = request.get_json()
+        if not 'email' in data or not 'password' in data:
+          return {'error': 'Falta data'}, 400
+        
         email = data['email']
         password = data['password']
 
         if not email or not password:
-            return {'error': 'Falta data'}, 403
+          return {'error': 'Falta data'}, 400
 
         login_info = Usuario.query.filter_by(email=email).first()
 
         if not login_info or not login_info.check_password(password):
-            return {'error': 'Login info incorrect.'}, 403
+          return {'error': 'Login info incorrect.'}, 403
         
         token = generate_token(login_info.nombre_usuario, 'user')
         session['auth_token'] = token

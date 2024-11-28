@@ -44,14 +44,14 @@ class AuthActions(object):
 
     def signup(self, email='test', username='test', password='test'):
         return self._client.post(
-            f'/api/{self._type}/signup',
-            data={'email': email, 'username': username, 'password': password}
+            f'/api/{self._type}/',
+            json={'email': email, 'username': username, 'password': password}
         )
 
     def login(self, email='test', password='test'):
-        return self._client.post(
-            f'/api/{self._type}/login',
-            data={'email': email, 'password': password}
+        return self._client.get(
+            f'/api/{self._type}/',
+            json={'email': email, 'password': password}
         )
     
     def init(self, email='test', username='test', password='test'):
@@ -59,7 +59,7 @@ class AuthActions(object):
         self.login(email, password)
     
     def logout(self):
-        return self._client.delete(f'/api/{self._type}/login')
+        return self._client.post(f'/{self._type}/logout')
     
 class TitleActions:
     def __init__(self, client):
