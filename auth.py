@@ -45,7 +45,7 @@ def generate_token(username, user_type: Literal['user', 'producer']):
       500:
         description: An error occurred during token generation.
     """
-    expiration = datetime.now(timezone.utc) + timedelta(minutes=15) 
+    expiration = datetime.now(timezone.utc) + timedelta(minutes=30) 
     token = jwt.encode({
             'username': username,
             'user_type': user_type,

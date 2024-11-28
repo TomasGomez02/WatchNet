@@ -387,8 +387,7 @@ class PerfilUsuario(Resource):
     Class to manage a user's profile. 
     Allows viewing, updating, and deleting specific sections of the profile.
     """
-    @token_required
-    def get(self, current_user, seccion=None):
+    def get(self, user, seccion=None):
         """
         Retrieve user profile information.
         ---
@@ -425,7 +424,7 @@ class PerfilUsuario(Resource):
           404:
             description: User not found.
         """
-        usuario = Usuario.query.filter_by(nombre_usuario=current_user).first()
+        usuario = Usuario.query.filter_by(nombre_usuario=user).first()
 
         if seccion == 'resenias':
             return self.obtener_resenias(usuario.id)
@@ -616,3 +615,4 @@ usuario_api.add_resource(SeguirAPI, '/follow',
                          '/follow/<int:seguido_id>')
 usuario_api.add_resource(WatchlistAPI, '/<string:user>/watchlist',
                          '/<string:user>/watchlist/<int:watch_id>')
+usuario_api.add_resource(PerfilUsuario, '/<string:user>/perfil')
